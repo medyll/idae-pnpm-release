@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/index.js",
   "bin": {
-    "idae-release": "./bin/cli.js"
+    "monorepo-pnpm-release": "./bin/cli.js"
   },
   "files": [
     "src",
@@ -28,6 +28,9 @@
   "author": "Mydde",
   "license": "MIT",
   "packageManager": "pnpm@10",
+  "packageConfig": {
+    "directory": "."
+  },
   "dependencies": {
     "@pnpm/find-workspace-packages": "^6.0.9",
     "commander": "^14.0.3",

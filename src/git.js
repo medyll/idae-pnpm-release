@@ -5,8 +5,8 @@ export async function finalizeGit(releasedPackages) {
   // 1. Setup identity if running in CI
   if (process.env.GITHUB_ACTIONS) {
     console.log("🔧 Configuring CI git identity...");
-    await execa('git', ['config', 'user.name', 'github-actions[bot]']);
-    await execa('git', ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
+    /* await execa('git', ['config', 'user.name', 'github-actions[bot]']);
+    await execa('git', ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com']); */
   }
 
   // 2. Stage changes
