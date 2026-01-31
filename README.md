@@ -1,7 +1,7 @@
 
 ---
 
-# pnpm-release-bot 🤖
+# idae-pnpm-release 🤖
 
 A minimalist, opinionated monorepo release tool designed for **pnpm** and **GitHub Actions**. It automates independent versioning, changelog management, and publishing based on Conventional Commits.
 
