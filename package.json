@@ -1,13 +1,43 @@
 {
   "name": "idae-pnpm-release",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "description": "Minimalist monorepo release tool for pnpm workspaces",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "idae-release": "./bin/cli.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.28.0"
+  "files": [
+    "src",
+    "bin",
+    "README.md"
+  ],
+  "scripts": {
+    "start": "node bin/cli.js",
+    "release": "node bin/cli.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "check-types": "tsc --noEmit"
+  },
+  "keywords": [
+    "pnpm",
+    "monorepo",
+    "release",
+    "versioning",
+    "changelog"
+  ],
+  "author": "Mydde",
+  "license": "MIT",
+  "packageManager": "pnpm@10.28.0",
+  "dependencies": {
+    "@pnpm/find-workspace-packages": "^6.0.9",
+    "commander": "^14.0.3",
+    "conventional-commits-parser": "^6.2.1",
+    "execa": "^9.6.1",
+    "semver": "^7.7.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.1.0",
+    "@types/semver": "^7.7.1",
+    "typescript": "^5.9.3"
+  }
 }
