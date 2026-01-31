@@ -1,24 +1,30 @@
 
 ---
 
-# idae-pnpm-release 🤖
+# @medyll/monorepo-pnpm-release 🤖
 
-A minimalist, opinionated monorepo release tool designed for **pnpm** and **GitHub Actions**. It automates independent versioning, changelog management, and publishing based on Conventional Commits.
+A lightweight, automated release manager for **pnpm workspaces**. It handles versioning, changelog generation, and publishing directly from GitHub Actions.
 
 ## ✨ Features
 
-* **Independent Versioning**: Each package is versioned individually based on its own git history.
-* **pnpm Native**: Deep integration with `pnpm-workspace.yaml` and `--filter` flags.
-* **Changelog Preservation**: Injects new entries into existing `CHANGELOG.md` files without overwriting history.
-* **Multiple Tagging**: Creates git tags in the format `package-name@version`.
-* **Pre-release Support**: Automatic detection of pre-release branches (alpha, beta, etc.).
-* **Dry Run Mode**: Preview changes locally before committing or publishing.
+* **Directory-based Detection**: Only bumps packages that have actual changes in their folder.
+* **Independent Versioning**: Each package follows its own lifecycle.
+* **Smart Changelogs**: Injects updates into existing `CHANGELOG.md` while preserving your history.
+* **Conventional Commits**: Automatically calculates `patch`, `minor`, or `major` bumps.
+* **pnpm Optimized**: Uses `pnpm-workspace.yaml` and handles `workspace:*` dependencies.
 
-## 🚀 Usage
+## 🚀 Installation
 
-### GitHub Actions (Recommended)
+You can run it directly via `npx` in your CI:
 
-Create a file `.github/workflows/release.yml`:
+```bash
+npx @medyll/monorepo-pnpm-release
+
+```
+
+## 🛠 Workflow Integration
+
+Create `.github/workflows/release.yml` in your monorepo:
 
 ```yaml
 name: Release
@@ -35,52 +41,45 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Required to see previous tags
+      
       - uses: pnpm/action-setup@v3
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: 'https://registry.npmjs.org'
-      
+
       - run: pnpm install --frozen-lockfile
-      - run: npx pnpm-release-bot
+      - run: npx @medyll/monorepo-pnpm-release
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 ```
 
-### Local Development
+## 📖 CLI Options
 
-```bash
-# Preview changes without impact
-npx pnpm-release-bot --dry-run
+| Option | Description | Default |
+| --- | --- | --- |
+| `--dry-run` | Preview version bumps and changelogs without pushing/publishing | `false` |
+| `--pre-id <id>` | Identifier for pre-releases (alpha, beta, next) | `alpha` |
 
-# Force a specific pre-release identifier
-npx pnpm-release-bot --pre-id next
+## 📝 Commit Convention
 
-```
+The tool analyzes your commit messages to decide the next version:
 
-## 🛠 Commit Convention
+* `fix: ...` → **patch**
+* `feat: ...` → **minor**
+* `feat!: ...` or `BREAKING CHANGE:` → **major**
 
-The tool uses **Conventional Commits** to determine the bump level:
+## 📂 Project Architecture
 
-| Commit Pattern | Release Type |
-| --- | --- |
-| `fix: ...` | **Patch** |
-| `feat: ...` | **Minor** |
-| `BREAKING CHANGE:` or `feat!:` | **Major** |
-
-> **Note**: Commits are scoped by directory. A commit only triggers a release for the package(s) located in the modified path.
-
-## 📦 Project Structure
-
-* `bin/cli.js`: Command-line interface.
-* `src/detector.js`: Git history analysis and change detection.
-* `src/versioner.js`: SemVer calculation and `package.json` updates.
-* `src/changelog.js`: Markdown injection logic.
-* `src/git.js`: Git commit and multi-tag orchestration.
-* `src/publisher.js`: Wrapper for `pnpm publish`.
+* `bin/cli.js`: Command entry point.
+* `src/detector.js`: Git history and pnpm workspace analysis.
+* `src/versioner.js`: SemVer logic and manifest updates.
+* `src/changelog.js`: Safe Markdown injection.
+* `src/git.js`: Git commit and multi-tagging.
+* `src/publisher.js`: pnpm publishing wrapper.
 
 ## 📄 License
 

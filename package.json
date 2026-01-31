@@ -1,6 +1,6 @@
 {
-  "name": "idae-pnpm-release",
-  "version": "1.0.0",
+  "name": "@medyll/monorepo-pnpm-release",
+  "version": "1.0.2-alpha.0",
   "description": "Minimalist monorepo release tool for pnpm workspaces",
   "type": "module",
   "main": "src/index.js",
