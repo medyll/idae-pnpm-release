@@ -9,22 +9,49 @@ A lightweight, automated release manager for **pnpm workspaces**. It handles ver
 
 * **Directory-based Detection**: Only bumps packages that have actual changes in their folder.
 * **Independent Versioning**: Each package follows its own lifecycle.
-* **Smart Changelogs**: Injects updates into existing `CHANGELOG.md` while preserving your history.
+* **Smart Changelogs**: Injects updates into existing `CHANGELOG.md` while preserving history.
 * **Conventional Commits**: Automatically calculates `patch`, `minor`, or `major` bumps.
-* **pnpm Optimized**: Uses `pnpm-workspace.yaml` and handles `workspace:*` dependencies.
+* **Zero-Config CI**: Automatically handles Git identity (bot) if not configured.
+* **Hybrid Support**: Works perfectly for both large monorepos and single-package projects.
 
-## 🚀 Installation
+---
 
-You can run it directly via `npx` in your CI:
+## 🚀 Installation & Usage
+
+### Option A: One-time execution (npx)
+
+Useful to avoid polluting your dependencies.
 
 ```bash
 npx @medyll/monorepo-pnpm-release
 
 ```
 
+### Option B: Integrated dependency
+
+Recommended to lock the tool version for the whole team.
+
+```bash
+pnpm add -D @medyll/monorepo-pnpm-release
+
+```
+
+Puis ajoutez le script dans votre `package.json` :
+
+```json
+"scripts": {
+  "release": "monorepo-pnpm-release"
+}
+
+```
+
+*Usage: `pnpm release*`
+
+---
+
 ## 🛠 Workflow Integration
 
-Create `.github/workflows/release.yml` in your monorepo:
+Créez le fichier `.github/workflows/release.yml` :
 
 ```yaml
 name: Release
@@ -41,9 +68,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Required to see previous tags
+          fetch-depth: 0 
       
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -57,29 +84,50 @@ jobs:
 
 ```
 
+---
+
 ## 📖 CLI Options
 
-| Option | Description | Default |
-| --- | --- | --- |
-| `--dry-run` | Preview version bumps and changelogs without pushing/publishing | `false` |
-| `--pre-id <id>` | Identifier for pre-releases (alpha, beta, next) | `alpha` |
+| Option | Alias | Description | Default |
+| --- | --- | --- | --- |
+| `--dry-run` | `-d` | Simulates the release without modifying Git or NPM | `false` |
+| `--pre-id` | `-p` | Pre-release identifier (alpha, beta, next) | `alpha` |
+| `--verbose` | `-v` | Shows detailed logs of internal steps | `false` |
+
+---
 
 ## 📝 Commit Convention
 
-The tool analyzes your commit messages to decide the next version:
+The tool analyzes your commit messages to decide the next bump:
 
 * `fix: ...` → **patch**
 * `feat: ...` → **minor**
+* `feat!: ...` ou `BREAKING CHANGE:` → **major**
 * `feat!: ...` or `BREAKING CHANGE:` → **major**
 
-## 📂 Project Architecture
+---
 
-* `bin/cli.js`: Command entry point.
-* `src/detector.js`: Git history and pnpm workspace analysis.
-* `src/versioner.js`: SemVer logic and manifest updates.
-* `src/changelog.js`: Safe Markdown injection.
-* `src/git.js`: Git commit and multi-tagging.
-* `src/publisher.js`: pnpm publishing wrapper.
+## 🛠 Troubleshooting
+
+### NPM Authentication Issues
+
+If the CI fails at the `publish` step:
+
+1. **Token Type**: Use an **Automation** token (not Fine-grained without write permissions).
+2. **GitHub Secret**: Make sure the secret is named `NPM_TOKEN`.
+3. **Access**: For `@scope/` packages, ensure they are public:
+```json
+"publishConfig": { "access": "public" }
+
+```
+
+
+### Git Identity Error
+
+If you see `Author identity unknown`:
+The tool automatically configures `github-actions[bot]`. If you use your own identity, make sure it is set before running the tool.
+
+---
 
 ## 📄 License
 

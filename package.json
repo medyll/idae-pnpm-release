@@ -4,6 +4,10 @@
   "description": "Minimalist monorepo release tool for pnpm workspaces",
   "type": "module",
   "main": "src/index.js",
+  "module": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
   "bin": {
     "monorepo-pnpm-release": "./bin/cli.js"
   },
