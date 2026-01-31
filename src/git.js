@@ -1,6 +1,7 @@
 // Commits & Tags multiples
 import { execa } from 'execa';
 
+// author : Lebrun Meddy
 export async function finalizeGit(releasedPackages) {
   // 1. Setup identity if running in CI
   if (process.env.GITHUB_ACTIONS) {

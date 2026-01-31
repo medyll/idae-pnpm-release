@@ -1,3 +1,4 @@
+// author : Lebrun Meddy
 import { analyzeChanges } from './detector.js';
 import { bumpPackages } from './versioner.js';
 import { updateChangelog } from './changelog.js';

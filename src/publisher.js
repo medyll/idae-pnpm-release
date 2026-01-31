@@ -1,3 +1,5 @@
+// author : Lebrun Meddy
+
 import { execa } from 'execa';
 
 export async function publishToRegistry(released, tag) {

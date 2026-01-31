@@ -1,3 +1,4 @@
+// author : Lebrun Meddy
 import findWorkspacePackages from '@pnpm/find-workspace-packages';
 import { execa } from 'execa';
 import fs from 'fs/promises';
