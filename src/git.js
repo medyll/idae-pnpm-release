@@ -1,4 +1,6 @@
 // Commits & Tags multiples
+import { execa } from 'execa';
+
 export async function finalizeGit(released) {
     await execa('git', ['add', '.']);
     await execa('git', ['commit', '-m', 'chore(release): publish packages']);
