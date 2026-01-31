@@ -3,7 +3,7 @@
 
 # @medyll/monorepo-pnpm-release 🤖
 
-A lightweight, automated release manager for **pnpm workspaces**. It handles versioning, changelog generation, and publishing directly from GitHub Actions.
+A lightweight, automated release manager for **pnpm workspaces**. It handles versioning, changelog generation, and publishing directly from GitHub Actions, for monorepos or standalone projects.
 
 ## ✨ Features
 
