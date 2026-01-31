@@ -26,8 +26,9 @@ async function getLastTag(packageName) {
  * Identify which packages need a release
  * Works for both pnpm workspaces and single packages
  */
-export async function analyzeChanges() {
+export async function analyzeChanges({ verbose } = {}) {
   let allPackages = [];
+  if (verbose) console.log('[verbose] Detecting workspace packages...');
 
   try {
     // Robust import handling for pnpm's internal tool
@@ -35,8 +36,8 @@ export async function analyzeChanges() {
       ? findWorkspacePackages 
       : findWorkspacePackages.default;
 
-    allPackages = await getPkgs('.');
-    
+    allPackages = await getPkgs('.')
+    if (verbose) console.log('[verbose] Found packages:', allPackages.map(p => p.manifest?.name || p.dir));
     // If workspace detection returns nothing, force fallback
     if (!allPackages || allPackages.length === 0) {
       throw new Error('No workspace found');
@@ -54,6 +55,7 @@ export async function analyzeChanges() {
         manifest: manifest
       }];
     } catch (err) {
+      if (verbose) console.log('[verbose] No pnpm workspace or package.json found in this directory.');
       console.error("❌ No pnpm workspace or package.json found in this directory.");
       return [];
     }
@@ -62,16 +64,19 @@ export async function analyzeChanges() {
   const packagesToRelease = [];
 
   for (const pkg of allPackages) {
+    if (verbose) console.log(`[verbose] Checking package: ${pkg.manifest.name}`);
     // Skip private packages unless they are the root fallback
     if (pkg.manifest.private && allPackages.length > 1) continue;
 
     const lastTag = await getLastTag(pkg.manifest.name);
     const range = lastTag ? `${lastTag}..HEAD` : 'HEAD';
+    if (verbose) console.log(`[verbose] Using git range: ${range}`);
 
     // Get logs for the package directory
     // pkg.dir is absolute path, works for both workspace and root
     const { stdout } = await execa('git', ['log', range, '--format=%B', '--', pkg.dir]);
-    
+    if (verbose) console.log(`[verbose] Git log for ${pkg.manifest.name}:`, stdout);
+
     // Split commits by double newline to separate them properly
     const commits = stdout.split('\n').filter(Boolean);
 
@@ -82,6 +87,7 @@ export async function analyzeChanges() {
         currentVersion: pkg.manifest.version,
         rawCommits: commits
       });
+      if (verbose) console.log(`[verbose] Package ${pkg.manifest.name} scheduled for release.`);
     }
   }
   
