@@ -51,7 +51,7 @@ Puis ajoutez le script dans votre `package.json` :
 
 ## 🛠 Workflow Integration
 
-Créez le fichier `.github/workflows/release.yml` :
+Create the file `.github/workflows/release.yml` :
 
 ```yaml
 name: Release
