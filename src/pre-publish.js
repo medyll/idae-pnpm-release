@@ -1,81 +1,51 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { execa } from "execa";
+import fs from "fs/promises";
+import path from "path";
 
-const execPromise = promisify(exec);
+async function readPackageManifest(pkgDir) {
+  const manifestPath = path.join(pkgDir, "package.json");
+  const content = await fs.readFile(manifestPath, "utf-8");
+  return JSON.parse(content);
+}
 
-/**
- * Check if a script exists in package.json
- * @param {string} scriptName - Name of the script to check
- * @returns {boolean} - True if script exists, false otherwise
- */
-function hasScript(scriptName) {
-  const packageJsonPath = join(process.cwd(), 'package.json');
-  
-  if (!existsSync(packageJsonPath)) {
-    return false;
-  }
-
-  try {
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
-    return packageJson.scripts && packageJson.scripts[scriptName] !== undefined;
-  } catch (error) {
-    return false;
-  }
+async function runPackageScript(pkgDir, scriptName) {
+  console.log(`    ⚙️  pnpm run ${scriptName}...`);
+  await execa("pnpm", ["run", scriptName], { cwd: pkgDir });
 }
 
 /**
  * Execute pre-publish commands (build and/or package) before release
+ * @param {Array} packages - Packages to process
  * @param {Object} options - CLI options
- * @param {boolean} options.build - Whether to execute "pnpm run build"
- * @param {boolean} options.package - Whether to execute "pnpm run package"
- * @param {boolean} options.verbose - Whether to show detailed logs
+ * @param {boolean} options.build - Whether to run build
+ * @param {boolean} options.package - Whether to run package
  */
-export async function executePrePublishCommands(options) {
-  // Execute build if --build option is provided
-  if (options.build) {
-    if (!hasScript('build')) {
-      console.log('⚠️  No "build" script found in package.json, skipping...\n');
-      return;
-    }
+export async function executePrePublishCommands(packages, options) {
+  const requestedScripts = [];
+  if (options.build) requestedScripts.push("build");
+  if (options.package) requestedScripts.push("package");
 
-    console.log('🔨 Executing "pnpm run build"...');
-    try {
-      const { stdout, stderr } = await execPromise('pnpm run build');
-      if (options.verbose && stdout) {
-        console.log(stdout);
-      }
-      if (stderr) {
-        console.error(stderr);
-      }
-      console.log('✅ Build completed successfully\n');
-    } catch (error) {
-      console.error(`❌ Build failed: ${error.message}`);
-      process.exit(1);
-    }
+  if (requestedScripts.length === 0) {
+    return;
   }
 
-  // Execute package if --package option is provided
-  if (options.package) {
-    if (!hasScript('package')) {
-      console.log('⚠️  No "package" script found in package.json, skipping...\n');
-      return;
+  for (const pkg of packages) {
+    const manifest = await readPackageManifest(pkg.dir);
+    const scripts = manifest.scripts || {};
+    const missingScripts = requestedScripts.filter(
+      (scriptName) => !scripts[scriptName],
+    );
+
+    if (missingScripts.length > 0) {
+      console.log(
+        `    ℹ️  ${manifest.name}: missing script(s): ${missingScripts.join(", ")}. Skipping.`,
+      );
     }
 
-    console.log('📦 Executing "pnpm run package"...');
-    try {
-      const { stdout, stderr } = await execPromise('pnpm run package');
-      if (options.verbose && stdout) {
-        console.log(stdout);
+    for (const scriptName of requestedScripts) {
+      if (scripts[scriptName]) {
+        await runPackageScript(pkg.dir, scriptName);
       }
-      if (stderr) {
-        console.error(stderr);
-      }
-      console.log('✅ Package completed successfully\n');
-    } catch (error) {
-      console.error(`❌ Package failed: ${error.message}`);
-      process.exit(1);
     }
   }
 }

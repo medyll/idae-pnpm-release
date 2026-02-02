@@ -18,27 +18,39 @@ A lightweight, automated release manager for **pnpm workspaces**. It handles ver
 
 ## 🚀 Installation & Usage
 
-## CLI Options Examples
+## CLI Options
 
 ### `--build`
-Use the `--build` option to build the packages before releasing. This ensures that all changes are compiled and ready for deployment.
+Execute the `build` script in each changed package before releasing. If a package does not define a `build` script, it is skipped with a neutral info message.
 
 ```bash
+# Build changed packages only
 npx @medyll/monorepo-pnpm-release --build
 ```
 
 ### `--package`
-The `--package` option allows you to specify a particular package to release. This is useful when you want to release a single package without affecting others.
+Execute the `package` script in each changed package before releasing. If a package does not define a `package` script, it is skipped with a neutral info message.
 
 ```bash
-npx @medyll/monorepo-pnpm-release --package my-package
+# Package changed packages only
+npx @medyll/monorepo-pnpm-release --package
+
+# Combine both flags
+npx @medyll/monorepo-pnpm-release --build --package
 ```
 
 ### `--verbose`
-Enable verbose logging with the `--verbose` option. This provides detailed output during the release process, which can help in debugging or understanding the steps being taken.
+Enable verbose logging with detailed output during the release process. Useful for debugging or understanding command execution.
 
 ```bash
-npx @medyll/monorepo-pnpm-release --verbose
+npx @medyll/monorepo-pnpm-release --build all --verbose
+```
+
+### `--dry-run`
+Analyze and simulate the release without making any changes.
+
+```bash
+npx @medyll/monorepo-pnpm-release --dry-run
 ```
 
 ### Option A: One-time execution (npx)
@@ -116,8 +128,8 @@ jobs:
 | `--dry-run` | `-d` | Simulates the release without modifying Git or NPM | `false` |
 | `--pre-id` | `-p` | Pre-release identifier (alpha, beta, next) | `alpha` |
 | `--verbose` | `-v` | Shows detailed logs of internal steps | `false` |
-| `--package` | `-P` | Package name to release | `all` |
-| `--build` | `-b` | Builds the app before releasing | `false
+| `--package` | `-k` | Runs `package` script in each changed package | `false` |
+| `--build` | `-b` | Runs `build` script in each changed package | `false` |
 
 ---
 

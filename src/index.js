@@ -1,10 +1,10 @@
 // author : Lebrun Meddy
-import { execa } from "execa";
 import { analyzeChanges } from "./detector.js";
 import { bumpPackages } from "./versioner.js";
 import { updateChangelog } from "./changelog.js";
 import { finalizeGit } from "./git.js";
 import { publishToRegistry } from "./publisher.js";
+import { executePrePublishCommands } from "./pre-publish.js";
 
 // Simple verbose logger
 function vLog(verbose, ...args) {
@@ -24,20 +24,6 @@ const colors = {
   cyan: "\x1b[36m",
   red: "\x1b[31m",
 };
-
-/**
- * Helper to safely run pnpm scripts only if they exist
- */
-async function runPackageScript(pkg, scriptName, verbose) {
-  const hasScript = pkg.manifest.scripts && pkg.manifest.scripts[scriptName];
-  
-  if (hasScript) {
-    console.log(`    ${colors.cyan}⚙️  pnpm run ${scriptName}...${colors.reset}`);
-    await execa("pnpm", ["run", scriptName], { cwd: pkg.dir });
-  } else {
-    vLog(verbose, `Skipping "${scriptName}" for ${pkg.name} (script not found in package.json)`);
-  }
-}
 
 export async function executeRelease(options) {
   const isPre = process.env.GITHUB_REF !== "refs/heads/main";
@@ -64,7 +50,10 @@ export async function executeRelease(options) {
     `${colors.green}Found ${changes.length} package(s) with changes.${colors.reset}`,
   );
 
-  // 2. Bumping versions
+  // 2. Pre-publish commands (per package)
+  await executePrePublishCommands(changes, options);
+
+  // 3. Bumping versions
   console.log(`${colors.cyan}🆙 Bumping versions...${colors.reset}`);
   const released = await bumpPackages(changes, isPre, options.preId, { verbose });
 
@@ -77,14 +66,6 @@ export async function executeRelease(options) {
     console.log(`  - ${colors.blue}📝 Updating CHANGELOG.md...${colors.reset}`);
     await updateChangelog(pkg, { verbose });
 
-    // 4. Build & Package (Safe execution)
-    if (options.build) {
-      await runPackageScript(pkg, "build", verbose);
-    }
-
-    if (options.package) {
-      await runPackageScript(pkg, "package", verbose);
-    }
   }
 
   // 5. Execution or Dry Run
