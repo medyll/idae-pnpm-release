@@ -1,6 +1,6 @@
 {
   "name": "@medyll/monorepo-pnpm-release",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Minimalist monorepo release tool for pnpm workspaces",
   "type": "module",
   "main": "src/index.js",
