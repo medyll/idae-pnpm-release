@@ -1,14 +1,15 @@
 // author : Lebrun Meddy
-import { analyzeChanges } from './detector.js';
-import { bumpPackages } from './versioner.js';
-import { updateChangelog } from './changelog.js';
-import { finalizeGit } from './git.js';
-import { publishToRegistry } from './publisher.js';
+import { execa } from "execa";
+import { analyzeChanges } from "./detector.js";
+import { bumpPackages } from "./versioner.js";
+import { updateChangelog } from "./changelog.js";
+import { finalizeGit } from "./git.js";
+import { publishToRegistry } from "./publisher.js";
 
 // Simple verbose logger
 function vLog(verbose, ...args) {
   if (verbose) {
-    console.log('[verbose]', ...args);
+    console.log(`${"\x1b[90m"}[verbose]`, ...args, "\x1b[0m");
   }
 }
 
@@ -21,58 +22,92 @@ const colors = {
   blue: "\x1b[34m",
   magenta: "\x1b[35m",
   cyan: "\x1b[36m",
-  red: "\x1b[31m"
+  red: "\x1b[31m",
 };
 
+/**
+ * Helper to safely run pnpm scripts only if they exist
+ */
+async function runPackageScript(pkg, scriptName, verbose) {
+  const hasScript = pkg.manifest.scripts && pkg.manifest.scripts[scriptName];
+  
+  if (hasScript) {
+    console.log(`    ${colors.cyan}⚙️  pnpm run ${scriptName}...${colors.reset}`);
+    await execa("pnpm", ["run", scriptName], { cwd: pkg.dir });
+  } else {
+    vLog(verbose, `Skipping "${scriptName}" for ${pkg.name} (script not found in package.json)`);
+  }
+}
+
 export async function executeRelease(options) {
-  const isPre = process.env.GITHUB_REF !== 'refs/heads/main';
-  const mode = isPre ? `PRE-RELEASE (${options.preId})` : 'STABLE';
+  const isPre = process.env.GITHUB_REF !== "refs/heads/main";
+  const mode = isPre ? `PRE-RELEASE (${options.preId})` : "STABLE";
   const verbose = options.verbose;
 
-  console.log(`\n${colors.bright}${colors.blue}🚀 Starting release process in ${mode} mode...${colors.reset}\n`);
-  vLog(verbose, 'Options:', options);
+  console.log(
+    `\n${colors.bright}${colors.blue}🚀 Starting release process in ${mode} mode...${colors.reset}\n`,
+  );
+  vLog(verbose, "Options:", options);
 
   // 1. Detection
   console.log(`${colors.cyan}🔍 Analyzing changes...${colors.reset}`);
-  vLog(verbose, 'Running analyzeChanges...');
   const changes = await analyzeChanges({ verbose });
-  vLog(verbose, 'Detected changes:', changes);
 
   if (!changes.length) {
-    console.log(`${colors.yellow}✨ Nothing to release. All packages are up to date.${colors.reset}`);
+    console.log(
+      `${colors.yellow}✨ Nothing to release. All packages are up to date.${colors.reset}`,
+    );
     return;
   }
 
-  console.log(`${colors.green}Found ${changes.length} package(s) with changes.${colors.reset}`);
-  vLog(verbose, 'Changed packages:', changes.map(c => c.name));
+  console.log(
+    `${colors.green}Found ${changes.length} package(s) with changes.${colors.reset}`,
+  );
 
   // 2. Bumping versions
   console.log(`${colors.cyan}🆙 Bumping versions...${colors.reset}`);
-  vLog(verbose, 'Calling bumpPackages...');
   const released = await bumpPackages(changes, isPre, options.preId, { verbose });
-  vLog(verbose, 'Bumped packages:', released);
 
   for (const pkg of released) {
-    console.log(`  - ${colors.bright}${pkg.name}${colors.reset}: ${colors.yellow}${pkg.currentVersion}${colors.reset} -> ${colors.green}${pkg.newVersion}${colors.reset}`);
-    vLog(verbose, `Updating changelog for ${pkg.name}`);
+    console.log(
+      `  - ${colors.bright}${pkg.name}${colors.reset}: ${colors.yellow}${pkg.currentVersion}${colors.reset} -> ${colors.green}${pkg.newVersion}${colors.reset}`,
+    );
+    
     // 3. Changelogs
-    console.log(`  - ${colors.blue}📝 Updating CHANGELOG.md for ${pkg.name}...${colors.reset}`);
+    console.log(`  - ${colors.blue}📝 Updating CHANGELOG.md...${colors.reset}`);
     await updateChangelog(pkg, { verbose });
+
+    // 4. Build & Package (Safe execution)
+    if (options.build) {
+      await runPackageScript(pkg, "build", verbose);
+    }
+
+    if (options.package) {
+      await runPackageScript(pkg, "package", verbose);
+    }
   }
 
-  // 4. Execution or Dry Run
+  // 5. Execution or Dry Run
   if (!options.dryRun) {
-    console.log(`\n${colors.magenta}📂 Finalizing Git operations (commit & tags)...${colors.reset}`);
-    vLog(verbose, 'Finalizing git...');
+    console.log(
+      `\n${colors.magenta}📂 Finalizing Git operations (commit & tags)...${colors.reset}`,
+    );
     await finalizeGit(released, { verbose });
 
     console.log(`${colors.magenta}📦 Publishing to registry...${colors.reset}`);
-    vLog(verbose, 'Publishing to registry...');
-    await publishToRegistry(released, isPre ? options.preId : 'latest', { verbose });
+    await publishToRegistry(released, isPre ? options.preId : "latest", {
+      verbose,
+    });
 
-    console.log(`\n${colors.bright}${colors.green}🎉 Release successfully finished!${colors.reset}\n`);
+    console.log(
+      `\n${colors.bright}${colors.green}🎉 Release successfully finished!${colors.reset}\n`,
+    );
   } else {
-    console.log(`\n${colors.bright}${colors.yellow}⚠️  DRY RUN COMPLETED${colors.reset}`);
-    console.log(`${colors.yellow}No changes were pushed to Git or NPM.${colors.reset}\n`);
+    console.log(
+      `\n${colors.bright}${colors.yellow}⚠️  DRY RUN COMPLETED${colors.reset}`,
+    );
+    console.log(
+      `${colors.yellow}No changes were pushed to Git or NPM.${colors.reset}\n`,
+    );
   }
 }

@@ -36,7 +36,7 @@ pnpm add -D @medyll/monorepo-pnpm-release
 
 ```
 
-Puis ajoutez le script dans votre `package.json` :
+Then add the following script to `package.json` :
 
 ```json
 "scripts": {
@@ -102,7 +102,6 @@ The tool analyzes your commit messages to decide the next bump:
 
 * `fix: ...` → **patch**
 * `feat: ...` → **minor**
-* `feat!: ...` ou `BREAKING CHANGE:` → **major**
 * `feat!: ...` or `BREAKING CHANGE:` → **major**
 
 ---

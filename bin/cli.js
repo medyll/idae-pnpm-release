@@ -12,6 +12,8 @@ program
   .option('-d, --dry-run', 'Analyze and simulate the release without any side effects', false)
   .option('-p, --pre-id <id>', 'Identifier for pre-release (e.g. alpha, beta, next)', 'alpha')
   .option('-v, --verbose', 'Print detailed logs', false)
+  .option('-b, --build', 'Execute "pnpm build" in each package before release', false)
+  .option('-k, --package', 'Execute "pnpm package" in each package before release', false)
   .action(async (options) => {
     try {
       await executeRelease(options);
