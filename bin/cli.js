@@ -2,6 +2,7 @@
 
 import { Command } from 'commander';
 import { executeRelease } from '../src/index.js';
+import { executePrePublishCommands } from '../src/pre-publish.js';
 
 const program = new Command();
 
@@ -12,10 +13,12 @@ program
   .option('-d, --dry-run', 'Analyze and simulate the release without any side effects', false)
   .option('-p, --pre-id <id>', 'Identifier for pre-release (e.g. alpha, beta, next)', 'alpha')
   .option('-v, --verbose', 'Print detailed logs', false)
-  .option('-b, --build', 'Execute "pnpm build" in each package before release', false)
-  .option('-k, --package', 'Execute "pnpm package" in each package before release', false)
+  .option('-b, --build', 'Execute "pnpm run build" before release', false)
+  .option('-k, --package', 'Execute "pnpm run package" before release', false)
   .action(async (options) => {
-    try {
+    try { 
+      await executePrePublishCommands(options);
+
       await executeRelease(options);
     } catch (error) {
       console.error(`\n❌ Execution failed: ${error.message}`);

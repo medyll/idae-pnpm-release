@@ -18,6 +18,29 @@ A lightweight, automated release manager for **pnpm workspaces**. It handles ver
 
 ## 🚀 Installation & Usage
 
+## CLI Options Examples
+
+### `--build`
+Use the `--build` option to build the packages before releasing. This ensures that all changes are compiled and ready for deployment.
+
+```bash
+npx @medyll/monorepo-pnpm-release --build
+```
+
+### `--package`
+The `--package` option allows you to specify a particular package to release. This is useful when you want to release a single package without affecting others.
+
+```bash
+npx @medyll/monorepo-pnpm-release --package my-package
+```
+
+### `--verbose`
+Enable verbose logging with the `--verbose` option. This provides detailed output during the release process, which can help in debugging or understanding the steps being taken.
+
+```bash
+npx @medyll/monorepo-pnpm-release --verbose
+```
+
 ### Option A: One-time execution (npx)
 
 Useful to avoid polluting your dependencies.
@@ -93,6 +116,8 @@ jobs:
 | `--dry-run` | `-d` | Simulates the release without modifying Git or NPM | `false` |
 | `--pre-id` | `-p` | Pre-release identifier (alpha, beta, next) | `alpha` |
 | `--verbose` | `-v` | Shows detailed logs of internal steps | `false` |
+| `--package` | `-P` | Package name to release | `all` |
+| `--build` | `-b` | Builds the app before releasing | `false
 
 ---
 
