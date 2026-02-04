@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.20] - 2026-02-04
+**Features:**
+- enable verbose logging and changelog regeneration in release bot
+- add --regenerate-changelog option to CLI and implement changelog regeneration functionality
+
+**Bug Fixes:**
+- remove --regenerate-changelog option from release bot command
+- remove verbose flag from changelog regeneration command in release workflow
+
+
+
 ## [Unreleased] - 2026-02-04
 - **2026-02-04** - chore(release): publish packages
 - **2026-02-04** - Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
