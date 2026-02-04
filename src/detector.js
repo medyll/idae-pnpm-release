@@ -5,6 +5,25 @@ import fs from 'fs/promises';
 import path from 'path';
 
 /**
+ * Detect if the current project is a monorepo
+ */
+export async function isMonorepo({ verbose } = {}) {
+  try {
+    const getPkgs = typeof findWorkspacePackages === 'function' 
+      ? findWorkspacePackages 
+      : findWorkspacePackages.default;
+
+    const allPackages = await getPkgs('.');
+    const isMultiPackage = allPackages && allPackages.length > 1;
+    if (verbose) console.log(`[verbose] isMonorepo: ${isMultiPackage} (found ${allPackages?.length} packages)`);
+    return isMultiPackage;
+  } catch (e) {
+    if (verbose) console.log(`[verbose] Not a monorepo:`, e.message);
+    return false;
+  }
+}
+
+/**
  * Get the most recent git tag for a specific package
  */
 async function getLastTag(packageName) {

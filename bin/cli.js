@@ -14,6 +14,7 @@ program
   .option('-v, --verbose', 'Print detailed logs', false)
   .option('-b, --build', 'Execute "pnpm run build" in each changed package before release', false)
   .option('-k, --package', 'Execute "pnpm run package" in each changed package before release', false)
+  .option('-r, --regenerate-changelog', 'Regenerate CHANGELOG.md from all commits (no versioning, no publishing)', false)
   .action(async (options) => {
     try { 
       await executeRelease(options);

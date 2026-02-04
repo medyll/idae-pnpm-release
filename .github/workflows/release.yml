@@ -42,7 +42,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          node bin/cli.js
+          node bin/cli.js --verbose --regenerate-changelog
         env:
           # Use the built-in GITHUB_TOKEN for git operations
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

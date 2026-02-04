@@ -39,6 +39,16 @@ npx @medyll/monorepo-pnpm-release --package
 npx @medyll/monorepo-pnpm-release --build --package
 ```
 
+### `--regenerate-changelog`
+Regenerate the entire `CHANGELOG.md` file from Git history. This rewrites the file with standardized formatting (Date + Conventional Commit), grouping commits by Release/Tag.
+*   **Monorepo**: Only includes commits touching the package directory.
+*   **Single Package**: Includes all commits in the repository.
+
+```bash
+# Regenerate changelog without publishing or versioning
+npx @medyll/monorepo-pnpm-release --regenerate-changelog
+```
+
 ### `--verbose`
 Enable verbose logging with detailed output during the release process. Useful for debugging or understanding command execution.
 

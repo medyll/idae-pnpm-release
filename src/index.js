@@ -1,10 +1,13 @@
 // author : Lebrun Meddy
-import { analyzeChanges } from "./detector.js";
+import { analyzeChanges, isMonorepo } from "./detector.js";
 import { bumpPackages } from "./versioner.js";
-import { updateChangelog } from "./changelog.js";
+import { updateChangelog, regenerateChangelog } from "./changelog.js";
 import { finalizeGit } from "./git.js";
 import { publishToRegistry } from "./publisher.js";
 import { executePrePublishCommands } from "./pre-publish.js";
+import findWorkspacePackages from '@pnpm/find-workspace-packages';
+import fs from 'fs/promises';
+import path from 'path';
 
 // Simple verbose logger
 function vLog(verbose, ...args) {
@@ -25,7 +28,93 @@ const colors = {
   red: "\x1b[31m",
 };
 
+/**
+ * Get all packages for changelog regeneration
+ */
+async function getAllPackages({ verbose } = {}) {
+  let allPackages = [];
+  try {
+    const getPkgs = typeof findWorkspacePackages === 'function' 
+      ? findWorkspacePackages 
+      : findWorkspacePackages.default;
+    allPackages = await getPkgs('.');
+    if (verbose) console.log('[verbose] Found packages:', allPackages.map(p => p.manifest?.name));
+  } catch (e) {
+    const manifestPath = path.join(process.cwd(), 'package.json');
+    try {
+      const content = await fs.readFile(manifestPath, 'utf-8');
+      const manifest = JSON.parse(content);
+      allPackages = [{
+        dir: process.cwd(),
+        manifest: manifest
+      }];
+    } catch (err) {
+      console.error("❌ No pnpm workspace or package.json found.");
+      return [];
+    }
+  }
+  return allPackages;
+}
+
+/**
+ * Regeneration mode: regenerate all changelogs from git history
+ */
+async function executeRegenerateChangelog(options) {
+  const verbose = options.verbose;
+
+  console.log(
+    `\n${colors.bright}${colors.blue}📝 Regenerating CHANGELOGs from git history...${colors.reset}\n`,
+  );
+  vLog(verbose, "Options:", options);
+
+  // Detect if monorepo
+  const monoRepo = await isMonorepo({ verbose });
+  console.log(`${colors.cyan}Monorepo mode: ${monoRepo ? 'YES' : 'NO'}${colors.reset}`);
+
+  // Get all packages
+  const allPackages = await getAllPackages({ verbose });
+  if (!allPackages.length) {
+    console.error("❌ No packages found.");
+    return;
+  }
+
+  console.log(`${colors.cyan}Found ${allPackages.length} package(s)${colors.reset}`);
+
+  // Regenerate for each package
+  for (const pkg of allPackages) {
+    if (pkg.manifest.private && allPackages.length > 1) {
+      if (verbose) console.log(`[verbose] Skipping private package: ${pkg.manifest.name}`);
+      continue;
+    }
+
+    console.log(`${colors.cyan}  📝 ${pkg.manifest.name}${colors.reset}`);
+    
+    // Prepare package object for changelog function
+    const pkgData = {
+      name: pkg.manifest.name,
+      dir: pkg.dir,
+      rawCommits: [] // Will be fetched inside regenerateChangelog
+    };
+
+    try {
+      await regenerateChangelog(pkgData, monoRepo, { verbose });
+      console.log(`${colors.green}    ✓ Generated${colors.reset}`);
+    } catch (e) {
+      console.error(`${colors.red}    ✗ Error: ${e.message}${colors.reset}`);
+    }
+  }
+
+  console.log(
+    `\n${colors.bright}${colors.green}🎉 Changelog regeneration completed!${colors.reset}\n`,
+  );
+}
+
 export async function executeRelease(options) {
+  // Handle regenerate changelog mode
+  if (options.regenerateChangelog) {
+    return executeRegenerateChangelog(options);
+  }
+
   const isPre = process.env.GITHUB_REF !== "refs/heads/main";
   const mode = isPre ? `PRE-RELEASE (${options.preId})` : "STABLE";
   const verbose = options.verbose;
