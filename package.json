@@ -31,7 +31,7 @@
   ],
   "author": "Mydde",
   "license": "MIT",
-  "packageConfig": {
+  "publishConfig": {
     "access": "public",
     "name": "@medyll/monorepo-pnpm-release",
     "directory": "."
