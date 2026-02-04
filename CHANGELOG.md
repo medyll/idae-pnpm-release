@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.0.18] - 2026-02-04
+- Update dependencies and fixes.
+
+
 ## [1.0.17] - 2026-02-03
 - Update dependencies and fixes.
 
