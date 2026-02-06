@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.22] - 2026-02-06
+**Features:**
+- add configuration loading from .idae.pnpm-release file and update CLI options
+
+
+
 ## [1.0.21] - 2026-02-06
 **Features:**
 - add root README generation functionality and update changelog entries
