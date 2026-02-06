@@ -9,7 +9,7 @@
     ".": "./src/index.js"
   },
   "bin": {
-    "idae-pnpm-release": "n/cli.js"
+    "idae-pnpm-release": "bin/cli.js"
   },
   "files": [
     "src",
