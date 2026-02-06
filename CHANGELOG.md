@@ -3,6 +3,101 @@
 ## [1.0.22] - 2026-02-06
 **Features:**
 - add configuration loading from .idae.pnpm-release file and update CLI options
+- add root README generation functionality and update changelog entries
+- enable verbose logging and changelog regeneration in release bot
+- add --regenerate-changelog option to CLI and implement changelog regeneration functionality
+- enhance changelog formatting to group commits by type
+- enhance CLI options and implement pre-publish command execution
+- add CLI options for pre-publish commands and enhance release process
+- add build and package options to release process
+- add verbose logging to release process and related functions
+- enhance README and package.json with new features and installation options
+- add access and name fields to packageConfig in package.json
+- update CI git identity setup in release workflow and adjust package.json bin name
+- enhance finalizeGit function to support CI identity setup and dynamic commit messages
+- add copilot instructions and update pnpm version in package.json
+- add continuous release workflow and update README for clarity
+- add import statement for execa in publisher module
+- enhance release process with CLI options, changelog updates, and improved package detection
+- implement pnpm-release-bot with changelog management, versioning, and GitHub Actions integration
+
+**Bug Fixes:**
+- update package name references from @medyll/monorepo-pnpm-release to @medyll/idae-pnpm-release in README, CLI, and package.json
+- remove --regenerate-changelog option from release bot command
+- remove verbose flag from changelog regeneration command in release workflow
+- set publishDirectory in pnpm-lock.yaml
+- correct publishConfig field name in package.json
+- add '--access public' flag to pnpm publish command
+- update French to English in workflow integration section of README
+- update CLI program name to match repository naming convention
+
+**Documentation:**
+- update project name in README from pnpm-release-bot to idae-pnpm-release
+
+**Refactoring:**
+- remove '--access public' flag from pnpm publish command
+- Add TypeScript configuration file (tsconfig.json) with strict settings
+
+**Chores:**
+- publish packages
+- publish packages
+- publish packages
+- publish packages
+- publish packages
+- publish packages
+- publish packages
+- remove packageManager field from package.json
+- publish packages
+- publish packages
+- publish packages
+- publish packages
+- publish packages
+- publish packages
+- add author comments to multiple source files
+- publish packages
+- publish packages
+- publish packages
+- publish packages
+- publish packages
+- update version to 1.0.3-alpha.0 and add changelog entry
+
+**Other:**
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+- - @medyll/monorepo-pnpm-release@1.0.22
+- - @medyll/monorepo-pnpm-release@1.0.21
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+- - @medyll/monorepo-pnpm-release@1.0.20
+- - @medyll/monorepo-pnpm-release@1.0.19
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+- - @medyll/monorepo-pnpm-release@1.0.18
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+- - @medyll/monorepo-pnpm-release@1.0.17
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+- - @medyll/monorepo-pnpm-release@1.0.16
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+- - @medyll/monorepo-pnpm-release@1.0.15
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+- - @medyll/monorepo-pnpm-release@1.0.14
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+- - @medyll/monorepo-pnpm-release@1.0.13
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+- - @medyll/monorepo-pnpm-release@1.0.12
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+- - @medyll/monorepo-pnpm-release@1.0.11
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+- - @medyll/monorepo-pnpm-release@1.0.10
+- - @medyll/monorepo-pnpm-release@1.0.9
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+- - @medyll/monorepo-pnpm-release@1.0.8
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+- - @medyll/monorepo-pnpm-release@1.0.7
+- Initial commit
+
+
+
+## [1.0.22] - 2026-02-06
+**Features:**
+- add configuration loading from .idae.pnpm-release file and update CLI options
 
 
 
