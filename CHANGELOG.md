@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.25] - 2026-02-06
+**Bug Fixes:**
+- correct typo in configuration file option description
+
+**Other:**
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+
+
+
 ## [1.0.24] - 2026-02-06
 **Features:**
 - add interactive configuration setup for .idae.pnpm-release
