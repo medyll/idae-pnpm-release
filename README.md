@@ -90,7 +90,30 @@ Then add the following script to `package.json` :
 
 ```
 
-*Usage: `pnpm release*`
+*Usage: `pnpm release`*
+
+---
+
+## ⚙️ Configuration
+
+You can configure the tool using CLI arguments or a configuration file.
+The tool looks for a `.idae.pnpm-release` file (JSON) in the project root.
+
+### Precedence Rule
+1. **CLI Arguments** (Highest priority, overrides config)
+2. **Configuration File** (`.idae.pnpm-release`)
+3. **Defaults**
+
+### Example `.idae.pnpm-release`
+```json
+{
+  "dry-run": false,
+  "verbose": true,
+  "pre-id": "beta",
+  "build": true,
+  "generate-readme-root": true
+}
+```
 
 ---
 

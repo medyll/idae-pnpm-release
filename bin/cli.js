@@ -2,6 +2,7 @@
 
 import { Command } from 'commander';
 import { executeRelease } from '../src/index.js';
+import { loadConfig } from '../src/config.js';
 
 const program = new Command();
 
@@ -16,9 +17,29 @@ program
   .option('-k, --package', 'Execute "pnpm run package" in each changed package before release', false)
   .option('-r, --regenerate-changelog', 'Regenerate CHANGELOG.md from all commits (no versioning, no publishing)', false)
   .option('--generate-readme-root', 'Generate root README based on workspace packages', false)
-  .action(async (options) => {
+  .action(async (options, command) => {
+    // Load config from file
+    const config = loadConfig();
+
+    // Merge config with options, giving priority to CLI args (if explicitly set)
+    const finalOptions = { ...options };
+
+    // Helper: convert kebab-case to camelCase (e.g. 'dry-run' -> 'dryRun')
+    const toCamel = (str) => str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+
+    Object.keys(config).forEach(rawKey => {
+      const key = toCamel(rawKey);
+      const source = command.getOptionValueSource(key);
+      
+      // If the user didn't explicitly set this flag in the terminal,
+      // let the config file override the default.
+      if (source !== 'cli') {
+        finalOptions[key] = config[rawKey];
+      }
+    });
+
     try { 
-      await executeRelease(options);
+      await executeRelease(finalOptions);
     } catch (error) {
       console.error(`\n❌ Execution failed: ${error.message}`);
       process.exit(1);
