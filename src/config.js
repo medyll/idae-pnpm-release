@@ -3,11 +3,11 @@ import path from 'path';
 import readline from 'readline';
 
 /**
- * Loads configuration from .idae.pnpm-release file in the current working directory
+ * Loads configuration from .idae-pnpm-release file in the current working directory
  * @returns {Object} Configuration object
  */
 export function loadConfig() {
-  const configName = '.idae.pnpm-release';
+  const configName = '.idae-pnpm-release';
   const configPath = path.join(process.cwd(), configName);
   
   if (fs.existsSync(configPath)) {
@@ -22,12 +22,12 @@ export function loadConfig() {
 }
 
 /**
- * Creates a default .idae.pnpm-release configuration file
+ * Creates a default .idae-pnpm-release configuration file
  * @param {Object} [options] - CLI options
  * @param {boolean} [options.yes] - Skip interaction and use defaults
  */
 export async function createConfig(options = {}) {
-  const configName = '.idae.pnpm-release';
+  const configName = '.idae-pnpm-release';
   const configPath = path.join(process.cwd(), configName);
   
   if (fs.existsSync(configPath)) {
