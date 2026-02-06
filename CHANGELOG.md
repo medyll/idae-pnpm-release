@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.24] - 2026-02-06
+**Features:**
+- add interactive configuration setup for .idae.pnpm-release
+
+**Bug Fixes:**
+- remove unnecessary publishDirectory from lockfile
+- correct path to CLI in bin configuration
+- remove relative path prefix in bin config and cleanup publishConfig
+
+**Chores:**
+- bump version to 1.0.22
+
+
+
 ## [1.0.22] - 2026-02-06
 **Features:**
 - add configuration loading from .idae.pnpm-release file and update CLI options
