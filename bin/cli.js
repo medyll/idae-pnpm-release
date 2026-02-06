@@ -15,6 +15,7 @@ program
   .option('-b, --build', 'Execute "pnpm run build" in each changed package before release', false)
   .option('-k, --package', 'Execute "pnpm run package" in each changed package before release', false)
   .option('-r, --regenerate-changelog', 'Regenerate CHANGELOG.md from all commits (no versioning, no publishing)', false)
+  .option('--generate-readme-root', 'Generate root README based on workspace packages', false)
   .action(async (options) => {
     try { 
       await executeRelease(options);

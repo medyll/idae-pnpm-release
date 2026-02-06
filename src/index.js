@@ -5,6 +5,7 @@ import { updateChangelog, regenerateChangelog } from "./changelog.js";
 import { finalizeGit } from "./git.js";
 import { publishToRegistry } from "./publisher.js";
 import { executePrePublishCommands } from "./pre-publish.js";
+import { generateRootReadme } from "./readme-generator.js";
 import findWorkspacePackages from '@pnpm/find-workspace-packages';
 import fs from 'fs/promises';
 import path from 'path';
@@ -154,7 +155,12 @@ export async function executeRelease(options) {
     // 3. Changelogs
     console.log(`  - ${colors.blue}📝 Updating CHANGELOG.md...${colors.reset}`);
     await updateChangelog(pkg, { verbose });
+  }
 
+  // 4. Generate Root README if requested
+  if (options.generateReadmeRoot) {
+    console.log(`${colors.cyan}📝 Generating root README.md...${colors.reset}`);
+    await generateRootReadme({ verbose, dryRun: options.dryRun });
   }
 
   // 5. Execution or Dry Run
