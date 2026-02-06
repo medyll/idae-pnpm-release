@@ -2,7 +2,7 @@
 
 import { Command } from 'commander';
 import { executeRelease } from '../src/index.js';
-import { loadConfig } from '../src/config.js';
+import { loadConfig, createConfig } from '../src/config.js';
 
 const program = new Command();
 
@@ -17,7 +17,14 @@ program
   .option('-k, --package', 'Execute "pnpm run package" in each changed package before release', false)
   .option('-r, --regenerate-changelog', 'Regenerate CHANGELOG.md from all commits (no versioning, no publishing)', false)
   .option('--generate-readme-root', 'Generate root README based on workspace packages', false)
+  .option('--install', 'Create a default .idae.pnpm-release configuration file', false)
+  .option('-y, --yes', 'Skip prompts and use defaults (for --install)', false)
   .action(async (options, command) => {
+    if (options.install) {
+      await createConfig(options);
+      process.exit(0);
+    }
+
     // Load config from file
     const config = loadConfig();
 

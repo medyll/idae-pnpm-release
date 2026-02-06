@@ -63,6 +63,18 @@ Analyze and simulate the release without making any changes.
 npx @medyll/idae-pnpm-release --dry-run
 ```
 
+### `--install`
+Create a default `.idae.pnpm-release` configuration file.
+This command is interactive by default and will prompt for confirmation or custom values.
+
+```bash
+# Interactive setup
+npx @medyll/idae-pnpm-release --install
+
+# Non-interactive (use defaults)
+npx @medyll/idae-pnpm-release --install --yes
+```
+
 ### Option A: One-time execution (npx)
 
 Useful to avoid polluting your dependencies.
@@ -163,6 +175,10 @@ jobs:
 | `--verbose` | `-v` | Shows detailed logs of internal steps | `false` |
 | `--package` | `-k` | Runs `package` script in each changed package | `false` |
 | `--build` | `-b` | Runs `build` script in each changed package | `false` |
+| `--install` | | Create a default configuration file | `false` |
+| `--yes` | `-y` | Skip prompts and use defaults (for --install) | `false` |
+| `--regenerate-changelog` | `-r` | Regenerate changelog file from history | `false` |
+| `--generate-readme-root` | | Generate root README from workspace | `false` |
 
 ---
 

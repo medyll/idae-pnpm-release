@@ -1,0 +1,9 @@
+{
+  "dry-run": false,
+  "pre-id": "alpha",
+  "verbose": false,
+  "build": false,
+  "package": false,
+  "regenerate-changelog": false,
+  "generate-readme-root": false
+}
