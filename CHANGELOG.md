@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.21] - 2026-02-06
+**Features:**
+- add root README generation functionality and update changelog entries
+
+**Other:**
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+
+
+
 ## [1.0.22-alpha.0] - 2026-02-06
 **Features:**
 - enable verbose logging and changelog regeneration in release bot
