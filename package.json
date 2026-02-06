@@ -1,5 +1,5 @@
 {
-  "name": "@medyll/monorepo-pnpm-release",
+  "name": "@medyll/idae-pnpm-release",
   "version": "1.0.21",
   "description": "Minimalist monorepo release tool for pnpm workspaces",
   "type": "module",
@@ -9,7 +9,7 @@
     ".": "./src/index.js"
   },
   "bin": {
-    "monorepo-pnpm-release": "./bin/cli.js"
+    "idae-pnpm-release": "./bin/cli.js"
   },
   "files": [
     "src",
@@ -33,7 +33,7 @@
   "license": "MIT",
   "publishConfig": {
     "access": "public",
-    "name": "@medyll/monorepo-pnpm-release",
+    "name": "@medyll/idae-pnpm-release",
     "directory": "."
   },
   "dependencies": {

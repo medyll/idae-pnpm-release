@@ -7,7 +7,7 @@ import { loadConfig } from '../src/config.js';
 const program = new Command();
 
 program
-  .name('@medyll/monorepo-pnpm-release')
+  .name('@medyll/idae-pnpm-release')
   .description('Automated release tool for pnpm workspaces and single packages')
   .version('1.0.0')
   .option('-d, --dry-run', 'Analyze and simulate the release without any side effects', false)

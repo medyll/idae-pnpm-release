@@ -56,7 +56,7 @@ export async function generateRootReadme({ verbose, dryRun } = {}) {
   }
 
   const monorepoName = rootPkg.name === "root" ? "Monorepo Workspace" : rootPkg.name;
-  const monorepoDescription = rootPkg.description || "Workspace managed by @medyll/monorepo-pnpm-release";
+  const monorepoDescription = rootPkg.description || "Workspace managed by @medyll/idae-pnpm-release";
 
   // Use pnpm tools to find packages
   let getPkgs = findWorkspacePackages;

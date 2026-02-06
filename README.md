@@ -1,7 +1,7 @@
 
 ---
 
-# @medyll/monorepo-pnpm-release 🤖
+# @medyll/idae-pnpm-release 🤖
 
 A lightweight, automated release manager for **pnpm workspaces**. It handles versioning, changelog generation, and publishing directly from GitHub Actions, for monorepos or standalone projects.
 
@@ -25,7 +25,7 @@ Execute the `build` script in each changed package before releasing. If a packag
 
 ```bash
 # Build changed packages only
-npx @medyll/monorepo-pnpm-release --build
+npx @medyll/idae-pnpm-release --build
 ```
 
 ### `--package`
@@ -33,10 +33,10 @@ Execute the `package` script in each changed package before releasing. If a pack
 
 ```bash
 # Package changed packages only
-npx @medyll/monorepo-pnpm-release --package
+npx @medyll/idae-pnpm-release --package
 
 # Combine both flags
-npx @medyll/monorepo-pnpm-release --build --package
+npx @medyll/idae-pnpm-release --build --package
 ```
 
 ### `--regenerate-changelog`
@@ -46,21 +46,21 @@ Regenerate the entire `CHANGELOG.md` file from Git history. This rewrites the fi
 
 ```bash
 # Regenerate changelog without publishing or versioning
-npx @medyll/monorepo-pnpm-release --regenerate-changelog
+npx @medyll/idae-pnpm-release --regenerate-changelog
 ```
 
 ### `--verbose`
 Enable verbose logging with detailed output during the release process. Useful for debugging or understanding command execution.
 
 ```bash
-npx @medyll/monorepo-pnpm-release --build all --verbose
+npx @medyll/idae-pnpm-release --build all --verbose
 ```
 
 ### `--dry-run`
 Analyze and simulate the release without making any changes.
 
 ```bash
-npx @medyll/monorepo-pnpm-release --dry-run
+npx @medyll/idae-pnpm-release --dry-run
 ```
 
 ### Option A: One-time execution (npx)
@@ -68,7 +68,7 @@ npx @medyll/monorepo-pnpm-release --dry-run
 Useful to avoid polluting your dependencies.
 
 ```bash
-npx @medyll/monorepo-pnpm-release
+npx @medyll/idae-pnpm-release
 
 ```
 
@@ -77,7 +77,7 @@ npx @medyll/monorepo-pnpm-release
 Recommended to lock the tool version for the whole team.
 
 ```bash
-pnpm add -D @medyll/monorepo-pnpm-release
+pnpm add -D @medyll/idae-pnpm-release
 
 ```
 
@@ -85,7 +85,7 @@ Then add the following script to `package.json` :
 
 ```json
 "scripts": {
-  "release": "monorepo-pnpm-release"
+  "release": "idae-pnpm-release"
 }
 
 ```
@@ -145,7 +145,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - run: pnpm install --frozen-lockfile
-      - run: npx @medyll/monorepo-pnpm-release
+      - run: npx @medyll/idae-pnpm-release
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
