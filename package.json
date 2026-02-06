@@ -9,7 +9,7 @@
     ".": "./src/index.js"
   },
   "bin": {
-    "idae-pnpm-release": "./bin/cli.js"
+    "idae-pnpm-release": "n/cli.js"
   },
   "files": [
     "src",
@@ -31,10 +31,8 @@
   ],
   "author": "Mydde",
   "license": "MIT",
-  "publishConfig": {
-    "access": "public",
-    "name": "@medyll/idae-pnpm-release",
-    "directory": "."
+    "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@pnpm/find-workspace-packages": "^6.0.9",
