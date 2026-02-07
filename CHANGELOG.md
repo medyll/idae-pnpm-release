@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.26] - 2026-02-06
+**Bug Fixes:**
+- correct configuration file name in README and source code
+
+
+
 ## [1.0.25] - 2026-02-06
 **Bug Fixes:**
 - correct typo in configuration file option description
