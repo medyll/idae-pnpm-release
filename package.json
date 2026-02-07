@@ -19,7 +19,7 @@
   "scripts": {
     "start": "node bin/cli.js",
     "release": "node bin/cli.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha \"test/**/*.js\" --experimental-vm-modules",
     "check-types": "tsc --noEmit"
   },
   "keywords": [
@@ -39,11 +39,13 @@
     "commander": "^14.0.3",
     "conventional-commits-parser": "^6.2.1",
     "execa": "^9.6.1",
+    "mocha": "^11.7.5",
     "semver": "^7.7.3"
   },
   "devDependencies": {
     "@types/node": "^25.1.0",
     "@types/semver": "^7.7.1",
+    "sinon": "^21.0.1",
     "typescript": "^5.9.3"
   }
 }
