@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.27] - 2026-02-07
+**Other:**
+- Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
+- Add unit tests for analyzeChanges and isMonorepo functions
+- - Created mocked tests for analyzeChanges to handle various scenarios including no commits, new commits, and skipping private packages.
+- - Added tests for analyzeChanges to ensure it returns an array and supports verbose options.
+- - Implemented tests for isMonorepo to check behavior with single packages and absence of package.json.
+- - Ensured all tests clean up temporary directories after execution.
+
+
+
 ## [1.0.26] - 2026-02-06
 **Bug Fixes:**
 - correct configuration file name in README and source code
