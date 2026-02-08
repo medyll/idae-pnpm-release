@@ -108,9 +108,10 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
     // Get commit hashes touching the package directory in the range
     // Use a relative path for the git pathspec and disable the pager to avoid hangs
     const relPkgPath = path.relative(process.cwd(), pkg.dir).replace(/\\/g, '/');
+    const relPath = relPkgPath || '.';
     let hashesOutRaw;
     try {
-      const res = await exec('git', ['--no-pager', 'log', range, '--format=%H', '--', relPkgPath], execOptions);
+      const res = await exec('git', ['--no-pager', 'log', range, '--format=%H', '--', relPath], execOptions);
       hashesOutRaw = (res && res.stdout !== undefined) ? res.stdout : res;
     } catch (e) {
       hashesOutRaw = '';
@@ -128,7 +129,14 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
 
       for (const hash of hashes) {
       // Get list of files changed in this commit (disable pager)
-      const { stdout: filesOut } = await exec('git', ['--no-pager', 'show', '--pretty=format:', '--name-only', hash], execOptions);
+      let filesOut = '';
+      try {
+        const resFiles = await exec('git', ['--no-pager', 'show', '--pretty=format:', '--name-only', hash], execOptions);
+        filesOut = (resFiles && resFiles.stdout !== undefined) ? resFiles.stdout : resFiles;
+      } catch (e) {
+        if (verbose) console.log(`[verbose] git show --name-only failed for ${hash}: ${e.message}`);
+        continue; // skip this commit if we cannot list files
+      }
       const files = filesOut.split('\n').map(f => f.trim()).filter(Boolean);
 
       // Determine if this commit contains at least one relevant file inside the package dir
@@ -147,9 +155,15 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
 
       if (hasRelevant) {
         // Get commit message body (disable pager)
-        const { stdout: bodyOut } = await exec('git', ['--no-pager', 'show', '-s', '--format=%B', hash], execOptions);
-        const commitBody = bodyOut.trim();
-        if (commitBody) relevantCommits.push(commitBody);
+        try {
+          const resBody = await exec('git', ['--no-pager', 'show', '-s', '--format=%B', hash], execOptions);
+          const bodyOut = (resBody && resBody.stdout !== undefined) ? resBody.stdout : resBody;
+          const commitBody = (bodyOut || '').trim();
+          if (commitBody) relevantCommits.push(commitBody);
+        } catch (e) {
+          if (verbose) console.log(`[verbose] git show body failed for ${hash}: ${e.message}`);
+          // skip adding this commit
+        }
       }
       }
     }
