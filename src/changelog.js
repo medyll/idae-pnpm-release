@@ -70,13 +70,9 @@ function formatCommitEntries(commits) {
  */
 async function getAllCommitsForPackage(packageDir, isMonorepo, { verbose } = {}) {
   try {
-    // Get commit hashes first, then filter by relevant files
-    const args = ['log', '--format=%H', '--'];
-    if (!isMonorepo) {
-      args.push('.');
-    } else {
-      args.push(packageDir);
-    }
+    // Get commit hashes first, then filter by relevant files (use repo-relative path)
+    const relPath = path.relative(process.cwd(), packageDir).replace(/\\/g, '/') || '.';
+    const args = ['log', '--format=%H', '--', relPath];
 
     const { stdout: hashesOut } = await execa('git', args);
     const hashes = hashesOut.split('\n').filter(Boolean);
@@ -151,13 +147,9 @@ export async function updateChangelog(pkg, { verbose } = {}) {
  */
 async function getCommitsWithDetails(packageDir, isMonorepo, { verbose } = {}) {
   try {
-    // Build commits from hashes but only include relevant-file commits
-    const args = ['log', '--format=%H', '--'];
-    if (!isMonorepo) {
-      args.push('.');
-    } else {
-      args.push(packageDir);
-    }
+    // Build commits from hashes but only include relevant-file commits (use repo-relative path)
+    const relPath = path.relative(process.cwd(), packageDir).replace(/\\/g, '/') || '.';
+    const args = ['log', '--format=%H', '--', relPath];
 
     const { stdout: hashesOut } = await execa('git', args);
     const hashes = hashesOut.split('\n').filter(Boolean);
@@ -219,9 +211,9 @@ export async function regenerateChangelog(pkg, isMonorepo, { verbose } = {}) {
     if (tags.length > 0) {
       const newestTag = tags[0];
       try {
-        // get hashes in range
-        const argsHashes = ['log', `${newestTag}..HEAD`, '--format=%H', '--'];
-        if (isMonorepo) argsHashes.push(pkg.dir); else argsHashes.push('.');
+        // get hashes in range (use repo-relative package path)
+        const relPkg = path.relative(process.cwd(), pkg.dir).replace(/\\/g, '/') || '.';
+        const argsHashes = ['log', `${newestTag}..HEAD`, '--format=%H', '--', relPkg];
         const { stdout: hashesOut } = await execa('git', argsHashes);
         const hashes = hashesOut.split('\n').filter(Boolean);
 
@@ -277,9 +269,9 @@ export async function regenerateChangelog(pkg, isMonorepo, { verbose } = {}) {
       }
       
       try {
-        // get hashes for this range then filter by relevant files
-        const argsHashes = ['log', range, '--format=%H', '--'];
-        if (isMonorepo) argsHashes.push(pkg.dir); else argsHashes.push('.');
+        // get hashes for this range then filter by relevant files (use repo-relative package path)
+        const relPkg = path.relative(process.cwd(), pkg.dir).replace(/\\/g, '/') || '.';
+        const argsHashes = ['log', range, '--format=%H', '--', relPkg];
         const { stdout: hashesOut } = await execa('git', argsHashes);
         const hashes = hashesOut.split('\n').filter(Boolean);
 

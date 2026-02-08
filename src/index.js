@@ -132,14 +132,9 @@ async function executeRegenerateChangelog(options) {
 
   console.log(`${colors.cyan}Found ${allPackages.length} package(s)${colors.reset}`);
 
-  // Regenerate for each package
+  // Regenerate for each package (include private packages for changelog regeneration)
   for (const pkg of allPackages) {
-    if (pkg.manifest.private && allPackages.length > 1) {
-      if (verbose) console.log(`[verbose] Skipping private package: ${pkg.manifest.name}`);
-      continue;
-    }
-
-    console.log(`${colors.cyan}  📝 ${pkg.manifest.name}${colors.reset}`);
+    console.log(`${colors.cyan}  📝 ${pkg.manifest.name || pkg.dir}${colors.reset}`);
     
     // Prepare package object for changelog function
     const pkgData = {
