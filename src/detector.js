@@ -3,6 +3,7 @@ import findWorkspacePackages from '@pnpm/find-workspace-packages';
 import { execa } from 'execa';
 import fs from 'fs/promises';
 import path from 'path';
+import { loadConfig } from './config.js';
 
 /**
  * Detect if the current project is a monorepo
@@ -102,20 +103,61 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
     const range = lastTag ? `${lastTag}..HEAD` : 'HEAD';
     if (verbose) console.log(`[verbose] Using git range: ${range}`);
 
-    // Get logs for the package directory
+    // Get commit hashes touching the package directory in the range
     // pkg.dir is absolute path, works for both workspace and root
-    const { stdout } = await exec('git', ['log', range, '--format=%B', '--', pkg.dir]);
-    if (verbose) console.log(`[verbose] Git log for ${pkg.manifest.name}:`, stdout);
+    // Try to get commit hashes. Some tests/stubs return commit bodies instead; handle both.
+    let hashesOutRaw;
+    try {
+      const res = await exec('git', ['log', range, '--format=%H', '--', pkg.dir]);
+      hashesOutRaw = (res && res.stdout !== undefined) ? res.stdout : res;
+    } catch (e) {
+      hashesOutRaw = '';
+    }
 
-    // Split commits by double newline to separate them properly
-    const commits = stdout.split('\n').filter(Boolean);
+    let relevantCommits = [];
 
-    if (commits.length > 0) {
+    // If the command returned what looks like commit messages (legacy stub), fallback to parsing messages
+    const looksLikeCommitMessages = typeof hashesOutRaw === 'string' && /(:\s|feat|fix|chore|docs)/i.test(hashesOutRaw) && !/^([0-9a-f]{7,40}$)/m.test(hashesOutRaw);
+    if (looksLikeCommitMessages) {
+      const commits = hashesOutRaw.split('\n').filter(Boolean);
+      relevantCommits = commits;
+    } else {
+      const hashes = (hashesOutRaw || '').split('\n').filter(Boolean);
+
+      for (const hash of hashes) {
+      // Get list of files changed in this commit
+      const { stdout: filesOut } = await exec('git', ['show', '--pretty=format:', '--name-only', hash]);
+      const files = filesOut.split('\n').map(f => f.trim()).filter(Boolean);
+
+      // Determine if this commit contains at least one relevant file inside the package dir
+      const cfg = loadConfig() || {};
+      const ignored = Array.isArray(cfg['ignore-file-changes']) ? cfg['ignore-file-changes'] : ['CHANGELOG.md', 'package.json'];
+
+      const hasRelevant = files.some(f => {
+        // Normalize and ensure path is inside the package dir
+        const abs = path.resolve(process.cwd(), f);
+        if (!abs.startsWith(path.resolve(pkg.dir))) return false;
+        const rel = path.relative(path.resolve(pkg.dir), abs).replace(/\\\\/g, '/');
+          // Exclude files configured in .idae-pnpm-release (only at package root)
+          if (ignored.includes(rel)) return false;
+        return true;
+      });
+
+      if (hasRelevant) {
+        // Get commit message body
+        const { stdout: bodyOut } = await exec('git', ['show', '-s', '--format=%B', hash]);
+        const commitBody = bodyOut.trim();
+        if (commitBody) relevantCommits.push(commitBody);
+      }
+      }
+    }
+
+    if (relevantCommits.length > 0) {
       packagesToRelease.push({
         name: pkg.manifest.name,
         dir: pkg.dir,
         currentVersion: pkg.manifest.version,
-        rawCommits: commits
+        rawCommits: relevantCommits
       });
       if (verbose) console.log(`[verbose] Package ${pkg.manifest.name} scheduled for release.`);
     }

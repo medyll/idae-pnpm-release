@@ -1,0 +1,6 @@
+{
+  "ignore-file-changes": [
+    "CHANGELOG.md",
+    "package.json"
+  ]
+}

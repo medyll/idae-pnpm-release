@@ -2,6 +2,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { execa } from 'execa';
+import { loadConfig } from './config.js';
 
 /**
  * Format conventional commits into changelog entries
@@ -69,24 +70,40 @@ function formatCommitEntries(commits) {
  */
 async function getAllCommitsForPackage(packageDir, isMonorepo, { verbose } = {}) {
   try {
-    const args = ['log', '--format=%B', '--'];
+    // Get commit hashes first, then filter by relevant files
+    const args = ['log', '--format=%H', '--'];
     if (!isMonorepo) {
-      // Single package: get all commits
       args.push('.');
     } else {
-      // Monorepo: get only commits touching this package directory
       args.push(packageDir);
     }
-    
-    const { stdout } = await execa('git', args);
-    if (verbose) console.log(`[verbose] Retrieved all commits for package`);
-    
-    // Parse commits - split by double newlines or by conventional commit patterns
-    const commits = stdout
-      .split('\n\n')
-      .filter(c => c.trim())
-      .map(c => c.trim());
-    
+
+    const { stdout: hashesOut } = await execa('git', args);
+    const hashes = hashesOut.split('\n').filter(Boolean);
+
+    const commits = [];
+    for (const hash of hashes) {
+      const { stdout: filesOut } = await execa('git', ['show', '--pretty=format:', '--name-only', hash]);
+      const files = filesOut.split('\n').map(f => f.trim()).filter(Boolean);
+
+      const cfg = loadConfig() || {};
+      const ignored = Array.isArray(cfg['ignore-file-changes']) ? cfg['ignore-file-changes'] : ['CHANGELOG.md', 'package.json'];
+
+      const hasRelevant = files.some(f => {
+          const abs = path.resolve(process.cwd(), f);
+          if (!abs.startsWith(path.resolve(packageDir))) return false;
+          const rel = path.relative(path.resolve(packageDir), abs).replace(/\\\\/g, '/');
+          if (ignored.includes(rel)) return false;
+          return true;
+        });
+
+      if (hasRelevant) {
+        const { stdout: bodyOut } = await execa('git', ['show', '-s', '--format=%B', hash]);
+        commits.push(bodyOut.trim());
+      }
+    }
+
+    if (verbose) console.log(`[verbose] Retrieved ${commits.length} relevant commits for package`);
     return commits;
   } catch (e) {
     if (verbose) console.log(`[verbose] No commits found:`, e.message);
@@ -134,26 +151,40 @@ export async function updateChangelog(pkg, { verbose } = {}) {
  */
 async function getCommitsWithDetails(packageDir, isMonorepo, { verbose } = {}) {
   try {
-    const args = ['log', '--format=%ai|%s', '--'];
+    // Build commits from hashes but only include relevant-file commits
+    const args = ['log', '--format=%H', '--'];
     if (!isMonorepo) {
       args.push('.');
     } else {
       args.push(packageDir);
     }
-    
-    const { stdout } = await execa('git', args);
-    if (verbose) console.log(`[verbose] Retrieved all commits with details`);
-    
-    const commits = stdout
-      .split('\n')
-      .filter(line => line.trim())
-      .map(line => {
-        const [dateTime, ...subjectParts] = line.split('|');
-        const date = dateTime.split(' ')[0];
-        const subject = subjectParts.join('|').trim();
-        return { date, subject };
+
+    const { stdout: hashesOut } = await execa('git', args);
+    const hashes = hashesOut.split('\n').filter(Boolean);
+
+    const commits = [];
+    for (const hash of hashes) {
+      const { stdout: filesOut } = await execa('git', ['show', '--pretty=format:', '--name-only', hash]);
+      const files = filesOut.split('\n').map(f => f.trim()).filter(Boolean);
+
+      const hasRelevant = files.some(f => {
+        const abs = path.resolve(process.cwd(), f);
+        if (!abs.startsWith(path.resolve(packageDir))) return false;
+        const rel = path.relative(path.resolve(packageDir), abs).replace(/\\\\/g, '/');
+        if (rel === 'package.json' || rel === 'CHANGELOG.md') return false;
+        return true;
       });
-    
+
+      if (hasRelevant) {
+        const { stdout: detailOut } = await execa('git', ['show', '-s', '--format=%ai|%s', hash]);
+        const [dateTime, ...subjectParts] = detailOut.split('|');
+        const date = (dateTime || '').split(' ')[0];
+        const subject = subjectParts.join('|').trim();
+        commits.push({ date, subject });
+      }
+    }
+
+    if (verbose) console.log(`[verbose] Retrieved ${commits.length} relevant commits with details`);
     return commits;
   } catch (e) {
     if (verbose) console.log(`[verbose] No commits found:`, e.message);
@@ -184,27 +215,37 @@ export async function regenerateChangelog(pkg, isMonorepo, { verbose } = {}) {
     // Build changelog
     let changelog = '# Changelog\n';
     
-    // 1. Unreleased (HEAD to Newest Tag)
+    // 1. Unreleased (HEAD to Newest Tag) - consider only relevant-file commits
     if (tags.length > 0) {
       const newestTag = tags[0];
       try {
-        const args = ['log', `${newestTag}..HEAD`, '--format=%ai|%s', '--'];
-        if (isMonorepo) {
-          args.push(pkg.dir);
-        } else {
-          args.push('.');
-        }
+        // get hashes in range
+        const argsHashes = ['log', `${newestTag}..HEAD`, '--format=%H', '--'];
+        if (isMonorepo) argsHashes.push(pkg.dir); else argsHashes.push('.');
+        const { stdout: hashesOut } = await execa('git', argsHashes);
+        const hashes = hashesOut.split('\n').filter(Boolean);
 
-        const { stdout } = await execa('git', args);
-        const unreleasedCommits = stdout
-          .split('\n')
-          .filter(line => line.trim())
-          .map(line => {
-            const [dateTime, ...subjectParts] = line.split('|');
-            const date = dateTime.split(' ')[0];
+        const unreleasedCommits = [];
+        for (const hash of hashes) {
+          const { stdout: filesOut } = await execa('git', ['show', '--pretty=format:', '--name-only', hash]);
+          const files = filesOut.split('\n').map(f => f.trim()).filter(Boolean);
+          const cfg = loadConfig() || {};
+          const ignored = Array.isArray(cfg['ignore-file-changes']) ? cfg['ignore-file-changes'] : ['CHANGELOG.md', 'package.json'];
+          const hasRelevant = files.some(f => {
+              const abs = path.resolve(process.cwd(), f);
+              if (!abs.startsWith(path.resolve(pkg.dir))) return false;
+              const rel = path.relative(path.resolve(pkg.dir), abs).replace(/\\\\/g, '/');
+              if (ignored.includes(rel)) return false;
+              return true;
+            });
+          if (hasRelevant) {
+            const { stdout: detailOut } = await execa('git', ['show', '-s', '--format=%ai|%s', hash]);
+            const [dateTime, ...subjectParts] = detailOut.split('|');
+            const date = (dateTime || '').split(' ')[0];
             const subject = subjectParts.join('|').trim();
-            return { date, subject };
-          });
+            unreleasedCommits.push({ date, subject });
+          }
+        }
 
         if (unreleasedCommits.length > 0) {
            changelog += `\n## [Unreleased] - ${new Date().toISOString().split('T')[0]}\n`;
@@ -216,7 +257,7 @@ export async function regenerateChangelog(pkg, isMonorepo, { verbose } = {}) {
          if (verbose) console.log(`[verbose] No unreleased commits found or error: ${e.message}`);
       }
     } else if (allCommits.length > 0) {
-      // No tags, everything is unreleased
+      // No tags, everything is unreleased (allCommits already filtered for relevant files)
       changelog += `\n## [Unreleased] - ${new Date().toISOString().split('T')[0]}\n`;
       allCommits.forEach(({ date, subject }) => {
         changelog += `- **${date}** - ${subject}\n`;
@@ -236,23 +277,33 @@ export async function regenerateChangelog(pkg, isMonorepo, { verbose } = {}) {
       }
       
       try {
-        const args = ['log', range, '--format=%ai|%s', '--'];
-        if (isMonorepo) {
-          args.push(pkg.dir);
-        } else {
-          args.push('.');
+        // get hashes for this range then filter by relevant files
+        const argsHashes = ['log', range, '--format=%H', '--'];
+        if (isMonorepo) argsHashes.push(pkg.dir); else argsHashes.push('.');
+        const { stdout: hashesOut } = await execa('git', argsHashes);
+        const hashes = hashesOut.split('\n').filter(Boolean);
+
+        const versionCommits = [];
+        for (const hash of hashes) {
+          const { stdout: filesOut } = await execa('git', ['show', '--pretty=format:', '--name-only', hash]);
+          const files = filesOut.split('\n').map(f => f.trim()).filter(Boolean);
+          const cfg = loadConfig() || {};
+          const ignored = Array.isArray(cfg['ignore-file-changes']) ? cfg['ignore-file-changes'] : ['CHANGELOG.md', 'package.json'];
+          const hasRelevant = files.some(f => {
+            const abs = path.resolve(process.cwd(), f);
+            if (!abs.startsWith(path.resolve(pkg.dir))) return false;
+            const rel = path.relative(path.resolve(pkg.dir), abs).replace(/\\\\/g, '/');
+            if (ignored.includes(rel)) return false;
+            return true;
+          });
+          if (hasRelevant) {
+            const { stdout: detailOut } = await execa('git', ['show', '-s', '--format=%ai|%s', hash]);
+            const [dateTime, ...subjectParts] = detailOut.split('|');
+            const date = (dateTime || '').split(' ')[0];
+            const subject = subjectParts.join('|').trim();
+            versionCommits.push({ date, subject });
+          }
         }
-        
-        const { stdout } = await execa('git', args);
-        const versionCommits = stdout
-          .split('\n')
-          .filter(line => line.trim())
-          .map(line => {
-             const [dateTime, ...subjectParts] = line.split('|');
-             const date = dateTime.split(' ')[0];
-             const subject = subjectParts.join('|').trim();
-             return { date, subject };
-           });
         
         if (versionCommits.length > 0) {
           const version = extractVersionFromTag(currentTag);
