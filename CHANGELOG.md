@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.27-alpha.0] - 2026-02-08
+**Features:**
+- ignore file-only changes via .idae-pnpm-release; add tests and docs
+
+**Other:**
+- Add unit tests for analyzeChanges and isMonorepo functions
+
+
+
 ## [1.0.26] - 2026-02-06
 **Bug Fixes:**
 - correct configuration file name in README and source code

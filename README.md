@@ -39,6 +39,20 @@ npx @medyll/idae-pnpm-release --package
 npx @medyll/idae-pnpm-release --build --package
 ```
 
+## 🔁 Publish behavior
+
+When publishing, the tool uses pnpm in a monorepo-friendly way:
+
+- If multiple packages need to be published, a single command is used:
+
+  `pnpm -r publish --filter <pkgA> --filter <pkgB> --tag <tag> --no-git-checks`
+
+  Each eligible package is passed with `--filter` to ensure only the selected packages are published.
+
+- If only one package is published, the existing behavior is preserved (per-package publish with `--filter <pkg>`).
+
+This reduces the number of separate `pnpm` calls and leverages recursive publishing when appropriate.
+
 ### `--regenerate-changelog`
 Regenerate the entire `CHANGELOG.md` file from Git history. This rewrites the file with standardized formatting (Date + Conventional Commit), grouping commits by Release/Tag.
 *   **Monorepo**: Only includes commits touching the package directory.
