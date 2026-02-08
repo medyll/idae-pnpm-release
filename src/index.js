@@ -38,8 +38,17 @@ async function getAllPackages({ verbose } = {}) {
     const getPkgs = typeof findWorkspacePackages === 'function' 
       ? findWorkspacePackages 
       : findWorkspacePackages.default;
-    allPackages = await getPkgs('.');
-    if (verbose) console.log('[verbose] Found packages:', allPackages.map(p => p.manifest?.name));
+    const result = await getPkgs('.');
+    // pnpm tool may return an array or an object with a 'packages' property
+    if (Array.isArray(result)) {
+      allPackages = result;
+    } else if (result && Array.isArray(result.packages)) {
+      allPackages = result.packages;
+    } else if (result && result.length === undefined && result && result.manifest) {
+      // single package shape
+      allPackages = [result];
+    }
+    if (verbose) console.log('[verbose] Found packages:', allPackages.map(p => p.manifest?.name || p.dir));
   } catch (e) {
     const manifestPath = path.join(process.cwd(), 'package.json');
     try {
@@ -145,7 +154,7 @@ export async function executeRelease(options) {
 
   // 3. Bumping versions
   console.log(`${colors.cyan}🆙 Bumping versions...${colors.reset}`);
-  const released = await bumpPackages(changes, isPre, options.preId, { verbose });
+  const released = await bumpPackages(changes, isPre, options.preId, { verbose, dryRun: options.dryRun });
 
   for (const pkg of released) {
     console.log(
