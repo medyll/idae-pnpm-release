@@ -19,8 +19,16 @@ export async function isMonorepo({ verbose } = {}) {
     } else {
       throw new Error('findWorkspacePackages is not a function');
     }
+    const result = await getPkgs('.');
+    let allPackages = [];
+    if (Array.isArray(result)) {
+      allPackages = result;
+    } else if (result && Array.isArray(result.packages)) {
+      allPackages = result.packages;
+    } else if (result && result.manifest && result.dir) {
+      allPackages = [result];
+    }
 
-    const allPackages = await getPkgs('.')
     const isMultiPackage = allPackages && allPackages.length > 1;
     if (verbose) console.log(`[verbose] isMonorepo: ${isMultiPackage} (found ${allPackages?.length} packages)`);
     return isMultiPackage;

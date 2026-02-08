@@ -63,6 +63,50 @@ async function getAllPackages({ verbose } = {}) {
       return [];
     }
   }
+
+  // If findWorkspacePackages returned only the root package but the repo
+  // contains a pnpm workspace (pnpm-workspace.yaml) or `workspaces` in
+  // package.json, try to enumerate `packages/*` directories as a fallback.
+  try {
+    if (allPackages.length <= 1) {
+      const rootPkgPath = path.join(process.cwd(), 'package.json');
+      let rootManifest = null;
+      try {
+        const content = await fs.readFile(rootPkgPath, 'utf-8');
+        rootManifest = JSON.parse(content);
+      } catch {}
+
+      const hasWorkspaceFile = await (async () => {
+        try {
+          await fs.access(path.join(process.cwd(), 'pnpm-workspace.yaml'));
+          return true;
+        } catch { return false; }
+      })();
+
+      const hasWorkspacesField = rootManifest && Array.isArray(rootManifest.workspaces) && rootManifest.workspaces.length > 0;
+
+      if (hasWorkspaceFile || hasWorkspacesField) {
+        try {
+          const packagesDir = path.join(process.cwd(), 'packages');
+          const entries = await fs.readdir(packagesDir, { withFileTypes: true });
+          const found = [];
+          for (const ent of entries) {
+            if (!ent.isDirectory()) continue;
+            const pkgPath = path.join(packagesDir, ent.name, 'package.json');
+            try {
+              const data = await fs.readFile(pkgPath, 'utf-8');
+              const manifest = JSON.parse(data);
+              found.push({ dir: path.join(packagesDir, ent.name), manifest });
+            } catch {}
+          }
+          if (found.length > 0) {
+            allPackages = found;
+            if (verbose) console.log('[verbose] Fallback: discovered packages in packages/*', allPackages.map(p => p.manifest.name));
+          }
+        } catch {}
+      }
+    }
+  } catch {}
   return allPackages;
 }
 
@@ -77,12 +121,10 @@ async function executeRegenerateChangelog(options) {
   );
   vLog(verbose, "Options:", options);
 
-  // Detect if monorepo
-  const monoRepo = await isMonorepo({ verbose });
-  console.log(`${colors.cyan}Monorepo mode: ${monoRepo ? 'YES' : 'NO'}${colors.reset}`);
-
-  // Get all packages
+  // Get all packages and detect monorepo by count
   const allPackages = await getAllPackages({ verbose });
+  const monoRepo = allPackages.length > 1;
+  console.log(`${colors.cyan}Monorepo mode: ${monoRepo ? 'YES' : 'NO'}${colors.reset}`);
   if (!allPackages.length) {
     console.error("❌ No packages found.");
     return;
