@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.29] - 2026-02-08
+**Features:**
+- update changelog generation to include private packages and add changelogs for package1 and package2
+- enhance package detection logic for monorepos and add fallback for workspace packages
+- enhance bumpPackages function with dryRun option and add corresponding tests
+- update changelog format and consolidate entries for clarity
+- update version to 1.0.29-alpha.0 and enhance changelog
+- update version to 1.0.28-alpha.0, enhance changelog, and add pnpm workspace configuration
+- add package2 module with initial configuration and entry point
+- add initial package1 module and configuration files
+- optimize analyzeChanges to use single git calls for file changes and update tests
+- add verbose logging for git log and show commands in analyzeChanges
+- enhance error handling in analyzeChanges for git command execution
+- enhance git command execution in analyzeChanges to disable pager on Windows
+- update changelog for version 1.0.27-alpha.0; enhance publish behavior for monorepos
+
+**Chores:**
+- regenerate changelogs; fix monorepo detection; respect --dry-run
+
+
+
 ## [Unreleased] - 2026-02-08
 - **2026-02-08** - feat: update changelog generation to include private packages and add changelogs for package1 and package2
 - **2026-02-08** - feat: enhance package detection logic for monorepos and add fallback for workspace packages
