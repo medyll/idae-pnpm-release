@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.28-alpha.0] - 2026-02-08
+**Features:**
+- add package2 module with initial configuration and entry point
+- add initial package1 module and configuration files
+- optimize analyzeChanges to use single git calls for file changes and update tests
+- add verbose logging for git log and show commands in analyzeChanges
+- enhance error handling in analyzeChanges for git command execution
+- enhance git command execution in analyzeChanges to disable pager on Windows
+- update changelog for version 1.0.27-alpha.0; enhance publish behavior for monorepos
+- ignore file-only changes via .idae-pnpm-release; add tests and docs
+
+**Other:**
+- Add unit tests for analyzeChanges and isMonorepo functions
+
+
+
 ## [1.0.27-alpha.0] - 2026-02-08
 **Features:**
 - ignore file-only changes via .idae-pnpm-release; add tests and docs

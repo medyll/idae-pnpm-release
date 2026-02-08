@@ -1,6 +1,6 @@
 {
   "name": "@medyll/idae-pnpm-release",
-  "version": "1.0.27-alpha.0",
+  "version": "1.0.28-alpha.0",
   "description": "Minimalist monorepo release tool for pnpm workspaces",
   "type": "module",
   "main": "src/index.js",
@@ -34,6 +34,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "dependencies": {
     "@pnpm/find-workspace-packages": "^6.0.9",
     "commander": "^14.0.3",
