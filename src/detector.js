@@ -111,6 +111,7 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
     const relPath = relPkgPath || '.';
     let hashesOutRaw;
     try {
+      if (verbose) console.log(`[verbose] Running git log for ${pkg.manifest.name} with path: ${relPath}`);
       const res = await exec('git', ['--no-pager', 'log', range, '--format=%H', '--', relPath], execOptions);
       hashesOutRaw = (res && res.stdout !== undefined) ? res.stdout : res;
     } catch (e) {
@@ -131,6 +132,7 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
       // Get list of files changed in this commit (disable pager)
       let filesOut = '';
       try {
+        if (verbose) console.log(`[verbose] Running git show --name-only for ${hash}`);
         const resFiles = await exec('git', ['--no-pager', 'show', '--pretty=format:', '--name-only', hash], execOptions);
         filesOut = (resFiles && resFiles.stdout !== undefined) ? resFiles.stdout : resFiles;
       } catch (e) {
@@ -156,7 +158,7 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
       if (hasRelevant) {
         // Get commit message body (disable pager)
         try {
-          const resBody = await exec('git', ['--no-pager', 'show', '-s', '--format=%B', hash], execOptions);
+          if (verbose) console.log(`[verbose] Running git show body for ${hash}`);
           const bodyOut = (resBody && resBody.stdout !== undefined) ? resBody.stdout : resBody;
           const commitBody = (bodyOut || '').trim();
           if (commitBody) relevantCommits.push(commitBody);
