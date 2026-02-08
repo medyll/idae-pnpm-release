@@ -105,69 +105,40 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
     const range = lastTag ? `${lastTag}..HEAD` : 'HEAD';
     if (verbose) console.log(`[verbose] Using git range: ${range}`);
 
-    // Get commit hashes touching the package directory in the range
-    // Use a relative path for the git pathspec and disable the pager to avoid hangs
+    // Collect changed files for the package in the range using a single git call
     const relPkgPath = path.relative(process.cwd(), pkg.dir).replace(/\\/g, '/');
     const relPath = relPkgPath || '.';
-    let hashesOutRaw;
-    try {
-      if (verbose) console.log(`[verbose] Running git log for ${pkg.manifest.name} with path: ${relPath}`);
-      const res = await exec('git', ['--no-pager', 'log', range, '--format=%H', '--', relPath], execOptions);
-      hashesOutRaw = (res && res.stdout !== undefined) ? res.stdout : res;
-    } catch (e) {
-      hashesOutRaw = '';
-    }
-
     let relevantCommits = [];
 
-    // If the command returned what looks like commit messages (legacy stub), fallback to parsing messages
-    const looksLikeCommitMessages = typeof hashesOutRaw === 'string' && /(:\s|feat|fix|chore|docs)/i.test(hashesOutRaw) && !/^([0-9a-f]{7,40}$)/m.test(hashesOutRaw);
-    if (looksLikeCommitMessages) {
-      const commits = hashesOutRaw.split('\n').filter(Boolean);
-      relevantCommits = commits;
-    } else {
-      const hashes = (hashesOutRaw || '').split('\n').filter(Boolean);
+    try {
+      const resFiles = await exec('git', ['--no-pager', 'log', range, '--pretty=format:', '--name-only', '--', relPath], execOptions);
+      const filesOut = (resFiles && resFiles.stdout !== undefined) ? resFiles.stdout : resFiles;
+      const files = (filesOut || '').split('\n').map(f => f.trim()).filter(Boolean);
 
-      for (const hash of hashes) {
-      // Get list of files changed in this commit (disable pager)
-      let filesOut = '';
-      try {
-        if (verbose) console.log(`[verbose] Running git show --name-only for ${hash}`);
-        const resFiles = await exec('git', ['--no-pager', 'show', '--pretty=format:', '--name-only', hash], execOptions);
-        filesOut = (resFiles && resFiles.stdout !== undefined) ? resFiles.stdout : resFiles;
-      } catch (e) {
-        if (verbose) console.log(`[verbose] git show --name-only failed for ${hash}: ${e.message}`);
-        continue; // skip this commit if we cannot list files
-      }
-      const files = filesOut.split('\n').map(f => f.trim()).filter(Boolean);
-
-      // Determine if this commit contains at least one relevant file inside the package dir
       const cfg = loadConfig() || {};
       const ignored = Array.isArray(cfg['ignore-file-changes']) ? cfg['ignore-file-changes'] : ['CHANGELOG.md', 'package.json'];
 
-      const hasRelevant = files.some(f => {
-        // Normalize and ensure path is inside the package dir
+      const uniqueFiles = Array.from(new Set(files));
+      const hasRelevantFile = uniqueFiles.some(f => {
         const abs = path.resolve(process.cwd(), f);
         if (!abs.startsWith(path.resolve(pkg.dir))) return false;
         const rel = path.relative(path.resolve(pkg.dir), abs).replace(/\\\\/g, '/');
-          // Exclude files configured in .idae-pnpm-release (only at package root)
-          if (ignored.includes(rel)) return false;
+        if (ignored.includes(rel)) return false;
         return true;
       });
 
-      if (hasRelevant) {
-        // Get commit message body (disable pager)
+      if (hasRelevantFile) {
         try {
-          if (verbose) console.log(`[verbose] Running git show body for ${hash}`);
-          const bodyOut = (resBody && resBody.stdout !== undefined) ? resBody.stdout : resBody;
-          const commitBody = (bodyOut || '').trim();
-          if (commitBody) relevantCommits.push(commitBody);
+          const resBodies = await exec('git', ['--no-pager', 'log', range, '--format=%B%x1e', '--no-merges', '--', relPath], execOptions);
+          const bodiesOut = (resBodies && resBodies.stdout !== undefined) ? resBodies.stdout : resBodies;
+          const commits = (bodiesOut || '').split('\x1e').map(s => (s || '').trim()).filter(Boolean);
+          relevantCommits = commits;
         } catch (e) {
-          if (verbose) console.log(`[verbose] git show body failed for ${hash}: ${e.message}`);
-          // skip adding this commit
+          if (verbose) console.log(`[verbose] git log bodies failed: ${e.message}`);
         }
       }
-      }
+    } catch (e) {
+      if (verbose) console.log(`[verbose] git log --name-only failed: ${e.message}`);
     }
 
     if (relevantCommits.length > 0) {

@@ -11,10 +11,8 @@ describe('analyzeChanges - ignore file changes', () => {
     const fakeExeca = sinon.stub();
     // 1) getLastTag
     fakeExeca.onCall(0).resolves({ stdout: 'v1.0.0' });
-    // 2) git log --format=%H  -> one hash
-    fakeExeca.onCall(1).resolves({ stdout: 'hash1' });
-    // 3) git show --name-only hash1 -> only package.json
-    fakeExeca.onCall(2).resolves({ stdout: 'package.json' });
+    // 2) git log --name-only <range> -- <path> -> only package.json
+    fakeExeca.onCall(1).resolves({ stdout: 'package.json' });
 
     const result = await analyzeChanges({ deps: {
       findWorkspacePackages: async () => fakePackages,
@@ -33,12 +31,10 @@ describe('analyzeChanges - ignore file changes', () => {
     const fakeExeca = sinon.stub();
     // 1) getLastTag
     fakeExeca.onCall(0).resolves({ stdout: 'v1.0.0' });
-    // 2) git log --format=%H  -> one hash
-    fakeExeca.onCall(1).resolves({ stdout: 'hash1' });
-    // 3) git show --name-only hash1 -> file path inside package
-    fakeExeca.onCall(2).resolves({ stdout: '/fake/pkg/src/index.js' });
-    // 4) git show -s --format=%B hash1 -> commit body
-    fakeExeca.onCall(3).resolves({ stdout: 'feat: add feature' });
+    // 2) git log --name-only <range> -- <path> -> file path inside package
+    fakeExeca.onCall(1).resolves({ stdout: '/fake/pkg/src/index.js' });
+    // 3) git log --format=%B%x1e -> commit bodies (record-separated)
+    fakeExeca.onCall(2).resolves({ stdout: 'feat: add feature' });
 
     const result = await analyzeChanges({ deps: {
       findWorkspacePackages: async () => fakePackages,
