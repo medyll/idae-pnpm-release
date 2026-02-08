@@ -21,7 +21,10 @@ describe('analyzeChanges (mocked)', () => {
     ];
     const fakeExeca = sinon.stub();
     fakeExeca.onFirstCall().resolves({ stdout: 'v1.0.0' }); // getLastTag
-    fakeExeca.onSecondCall().resolves({ stdout: 'feat: add feature\nfix: bugfix' }); // git log
+    // git log --name-only -> list of files (absolute paths as returned by some git configs/stubs)
+    fakeExeca.onSecondCall().resolves({ stdout: '/fake/pkg/src/index.js' });
+    // git log --format=%B%x1e -> commit bodies (record-separated)
+    fakeExeca.onThirdCall().resolves({ stdout: 'feat: add feature\x1efix: bugfix' });
     const result = await analyzeChanges({ deps: {
       findWorkspacePackages: async () => fakePackages,
       execa: fakeExeca
@@ -36,7 +39,11 @@ describe('analyzeChanges (mocked)', () => {
       { dir: '/fake/pkg1', manifest: { name: 'pkg1', version: '1.0.0', private: true } },
       { dir: '/fake/pkg2', manifest: { name: 'pkg2', version: '1.0.0', private: false } }
     ];
-    const fakeExeca = sinon.stub().resolves({ stdout: 'feat: pkg2 change' });
+    const fakeExeca = sinon.stub();
+    // pkg1 is private; pkg2 will call git twice (name-only + bodies)
+    fakeExeca.onCall(0).resolves({ stdout: '' }); // getLastTag for pkg2
+    fakeExeca.onCall(1).resolves({ stdout: '/fake/pkg2/src/file' }); // name-only
+    fakeExeca.onCall(2).resolves({ stdout: 'feat: pkg2 change' }); // bodies
     const result = await analyzeChanges({ deps: {
       findWorkspacePackages: async () => fakePackages,
       execa: fakeExeca

@@ -38,8 +38,17 @@ async function getAllPackages({ verbose } = {}) {
     const getPkgs = typeof findWorkspacePackages === 'function' 
       ? findWorkspacePackages 
       : findWorkspacePackages.default;
-    allPackages = await getPkgs('.');
-    if (verbose) console.log('[verbose] Found packages:', allPackages.map(p => p.manifest?.name));
+    const result = await getPkgs('.');
+    // pnpm tool may return an array or an object with a 'packages' property
+    if (Array.isArray(result)) {
+      allPackages = result;
+    } else if (result && Array.isArray(result.packages)) {
+      allPackages = result.packages;
+    } else if (result && result.length === undefined && result && result.manifest) {
+      // single package shape
+      allPackages = [result];
+    }
+    if (verbose) console.log('[verbose] Found packages:', allPackages.map(p => p.manifest?.name || p.dir));
   } catch (e) {
     const manifestPath = path.join(process.cwd(), 'package.json');
     try {
@@ -54,6 +63,55 @@ async function getAllPackages({ verbose } = {}) {
       return [];
     }
   }
+
+  // If findWorkspacePackages returned only the root package but the repo
+  // contains a pnpm workspace (pnpm-workspace.yaml) or `workspaces` in
+  // package.json, try to enumerate `packages/*` directories as a fallback.
+  try {
+    if (allPackages.length <= 1) {
+      const rootPkgPath = path.join(process.cwd(), 'package.json');
+      let rootManifest = null;
+      try {
+        const content = await fs.readFile(rootPkgPath, 'utf-8');
+        rootManifest = JSON.parse(content);
+      } catch {}
+
+      const hasWorkspaceFile = await (async () => {
+        try {
+          await fs.access(path.join(process.cwd(), 'pnpm-workspace.yaml'));
+          return true;
+        } catch { return false; }
+      })();
+
+      const hasWorkspacesField = rootManifest && Array.isArray(rootManifest.workspaces) && rootManifest.workspaces.length > 0;
+
+      if (hasWorkspaceFile || hasWorkspacesField) {
+        try {
+          const packagesDir = path.join(process.cwd(), 'packages');
+          const entries = await fs.readdir(packagesDir, { withFileTypes: true });
+          const found = [];
+          for (const ent of entries) {
+            if (!ent.isDirectory()) continue;
+            const pkgPath = path.join(packagesDir, ent.name, 'package.json');
+            try {
+              const data = await fs.readFile(pkgPath, 'utf-8');
+              const manifest = JSON.parse(data);
+              found.push({ dir: path.join(packagesDir, ent.name), manifest });
+            } catch {}
+          }
+          if (found.length > 0) {
+            // If a root package exists, include it so we can generate a root CHANGELOG
+            if (rootManifest) {
+              allPackages = [{ dir: process.cwd(), manifest: rootManifest }, ...found];
+            } else {
+              allPackages = found;
+            }
+            if (verbose) console.log('[verbose] Fallback: discovered packages in packages/*', allPackages.map(p => p.manifest.name));
+          }
+        } catch {}
+      }
+    }
+  } catch {}
   return allPackages;
 }
 
@@ -68,12 +126,10 @@ async function executeRegenerateChangelog(options) {
   );
   vLog(verbose, "Options:", options);
 
-  // Detect if monorepo
-  const monoRepo = await isMonorepo({ verbose });
-  console.log(`${colors.cyan}Monorepo mode: ${monoRepo ? 'YES' : 'NO'}${colors.reset}`);
-
-  // Get all packages
+  // Get all packages and detect monorepo by count
   const allPackages = await getAllPackages({ verbose });
+  const monoRepo = allPackages.length > 1;
+  console.log(`${colors.cyan}Monorepo mode: ${monoRepo ? 'YES' : 'NO'}${colors.reset}`);
   if (!allPackages.length) {
     console.error("❌ No packages found.");
     return;
@@ -81,14 +137,9 @@ async function executeRegenerateChangelog(options) {
 
   console.log(`${colors.cyan}Found ${allPackages.length} package(s)${colors.reset}`);
 
-  // Regenerate for each package
+  // Regenerate for each package (include private packages for changelog regeneration)
   for (const pkg of allPackages) {
-    if (pkg.manifest.private && allPackages.length > 1) {
-      if (verbose) console.log(`[verbose] Skipping private package: ${pkg.manifest.name}`);
-      continue;
-    }
-
-    console.log(`${colors.cyan}  📝 ${pkg.manifest.name}${colors.reset}`);
+    console.log(`${colors.cyan}  📝 ${pkg.manifest.name || pkg.dir}${colors.reset}`);
     
     // Prepare package object for changelog function
     const pkgData = {
@@ -145,7 +196,7 @@ export async function executeRelease(options) {
 
   // 3. Bumping versions
   console.log(`${colors.cyan}🆙 Bumping versions...${colors.reset}`);
-  const released = await bumpPackages(changes, isPre, options.preId, { verbose });
+  const released = await bumpPackages(changes, isPre, options.preId, { verbose, dryRun: options.dryRun });
 
   for (const pkg of released) {
     console.log(

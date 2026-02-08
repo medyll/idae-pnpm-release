@@ -19,8 +19,16 @@ export async function isMonorepo({ verbose } = {}) {
     } else {
       throw new Error('findWorkspacePackages is not a function');
     }
+    const result = await getPkgs('.');
+    let allPackages = [];
+    if (Array.isArray(result)) {
+      allPackages = result;
+    } else if (result && Array.isArray(result.packages)) {
+      allPackages = result.packages;
+    } else if (result && result.manifest && result.dir) {
+      allPackages = [result];
+    }
 
-    const allPackages = await getPkgs('.')
     const isMultiPackage = allPackages && allPackages.length > 1;
     if (verbose) console.log(`[verbose] isMonorepo: ${isMultiPackage} (found ${allPackages?.length} packages)`);
     return isMultiPackage;
@@ -92,6 +100,8 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
   }
 
   const exec = deps.execa || execa;
+  // Ensure git won't spawn a pager or wait for interactive input on Windows
+  const execOptions = { env: { ...process.env, GIT_PAGER: 'cat' } };
   const packagesToRelease = [];
 
   for (const pkg of allPackages) {
@@ -103,53 +113,40 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
     const range = lastTag ? `${lastTag}..HEAD` : 'HEAD';
     if (verbose) console.log(`[verbose] Using git range: ${range}`);
 
-    // Get commit hashes touching the package directory in the range
-    // pkg.dir is absolute path, works for both workspace and root
-    // Try to get commit hashes. Some tests/stubs return commit bodies instead; handle both.
-    let hashesOutRaw;
-    try {
-      const res = await exec('git', ['log', range, '--format=%H', '--', pkg.dir]);
-      hashesOutRaw = (res && res.stdout !== undefined) ? res.stdout : res;
-    } catch (e) {
-      hashesOutRaw = '';
-    }
-
+    // Collect changed files for the package in the range using a single git call
+    const relPkgPath = path.relative(process.cwd(), pkg.dir).replace(/\\/g, '/');
+    const relPath = relPkgPath || '.';
     let relevantCommits = [];
 
-    // If the command returned what looks like commit messages (legacy stub), fallback to parsing messages
-    const looksLikeCommitMessages = typeof hashesOutRaw === 'string' && /(:\s|feat|fix|chore|docs)/i.test(hashesOutRaw) && !/^([0-9a-f]{7,40}$)/m.test(hashesOutRaw);
-    if (looksLikeCommitMessages) {
-      const commits = hashesOutRaw.split('\n').filter(Boolean);
-      relevantCommits = commits;
-    } else {
-      const hashes = (hashesOutRaw || '').split('\n').filter(Boolean);
+    try {
+      const resFiles = await exec('git', ['--no-pager', 'log', range, '--pretty=format:', '--name-only', '--', relPath], execOptions);
+      const filesOut = (resFiles && resFiles.stdout !== undefined) ? resFiles.stdout : resFiles;
+      const files = (filesOut || '').split('\n').map(f => f.trim()).filter(Boolean);
 
-      for (const hash of hashes) {
-      // Get list of files changed in this commit
-      const { stdout: filesOut } = await exec('git', ['show', '--pretty=format:', '--name-only', hash]);
-      const files = filesOut.split('\n').map(f => f.trim()).filter(Boolean);
-
-      // Determine if this commit contains at least one relevant file inside the package dir
       const cfg = loadConfig() || {};
       const ignored = Array.isArray(cfg['ignore-file-changes']) ? cfg['ignore-file-changes'] : ['CHANGELOG.md', 'package.json'];
 
-      const hasRelevant = files.some(f => {
-        // Normalize and ensure path is inside the package dir
+      const uniqueFiles = Array.from(new Set(files));
+      const hasRelevantFile = uniqueFiles.some(f => {
         const abs = path.resolve(process.cwd(), f);
         if (!abs.startsWith(path.resolve(pkg.dir))) return false;
         const rel = path.relative(path.resolve(pkg.dir), abs).replace(/\\\\/g, '/');
-          // Exclude files configured in .idae-pnpm-release (only at package root)
-          if (ignored.includes(rel)) return false;
+        if (ignored.includes(rel)) return false;
         return true;
       });
 
-      if (hasRelevant) {
-        // Get commit message body
-        const { stdout: bodyOut } = await exec('git', ['show', '-s', '--format=%B', hash]);
-        const commitBody = bodyOut.trim();
-        if (commitBody) relevantCommits.push(commitBody);
+      if (hasRelevantFile) {
+        try {
+          const resBodies = await exec('git', ['--no-pager', 'log', range, '--format=%B%x1e', '--no-merges', '--', relPath], execOptions);
+          const bodiesOut = (resBodies && resBodies.stdout !== undefined) ? resBodies.stdout : resBodies;
+          const commits = (bodiesOut || '').split('\x1e').map(s => (s || '').trim()).filter(Boolean);
+          relevantCommits = commits;
+        } catch (e) {
+          if (verbose) console.log(`[verbose] git log bodies failed: ${e.message}`);
+        }
       }
-      }
+    } catch (e) {
+      if (verbose) console.log(`[verbose] git log --name-only failed: ${e.message}`);
     }
 
     if (relevantCommits.length > 0) {
