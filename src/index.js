@@ -100,7 +100,12 @@ async function getAllPackages({ verbose } = {}) {
             } catch {}
           }
           if (found.length > 0) {
-            allPackages = found;
+            // If a root package exists, include it so we can generate a root CHANGELOG
+            if (rootManifest) {
+              allPackages = [{ dir: process.cwd(), manifest: rootManifest }, ...found];
+            } else {
+              allPackages = found;
+            }
             if (verbose) console.log('[verbose] Fallback: discovered packages in packages/*', allPackages.map(p => p.manifest.name));
           }
         } catch {}

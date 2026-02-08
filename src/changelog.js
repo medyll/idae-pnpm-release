@@ -86,12 +86,9 @@ async function getAllCommitsForPackage(packageDir, isMonorepo, { verbose } = {})
       const ignored = Array.isArray(cfg['ignore-file-changes']) ? cfg['ignore-file-changes'] : ['CHANGELOG.md', 'package.json'];
 
       const hasRelevant = files.some(f => {
-          const abs = path.resolve(process.cwd(), f);
-          if (!abs.startsWith(path.resolve(packageDir))) return false;
-          const rel = path.relative(path.resolve(packageDir), abs).replace(/\\\\/g, '/');
-          if (ignored.includes(rel)) return false;
-          return true;
-        });
+        const abs = path.resolve(process.cwd(), f);
+        return fileIsRelevant(abs, packageDir, isMonorepo, ignored);
+      });
 
       if (hasRelevant) {
         const { stdout: bodyOut } = await execa('git', ['show', '-s', '--format=%B', hash]);
@@ -159,12 +156,14 @@ async function getCommitsWithDetails(packageDir, isMonorepo, { verbose } = {}) {
       const { stdout: filesOut } = await execa('git', ['show', '--pretty=format:', '--name-only', hash]);
       const files = filesOut.split('\n').map(f => f.trim()).filter(Boolean);
 
+      const cfg = loadConfig() || {};
+      const ignored = Array.isArray(cfg['ignore-file-changes']) ? cfg['ignore-file-changes'] : ['CHANGELOG.md', 'package.json'];
       const hasRelevant = files.some(f => {
         const abs = path.resolve(process.cwd(), f);
-        if (!abs.startsWith(path.resolve(packageDir))) return false;
-        const rel = path.relative(path.resolve(packageDir), abs).replace(/\\\\/g, '/');
+        // Exclude package.json and CHANGELOG.md explicitly
+        const rel = path.relative(path.resolve(packageDir), abs).replace(/\\/g, '/');
         if (rel === 'package.json' || rel === 'CHANGELOG.md') return false;
-        return true;
+        return fileIsRelevant(abs, packageDir, isMonorepo, ignored);
       });
 
       if (hasRelevant) {
@@ -224,12 +223,9 @@ export async function regenerateChangelog(pkg, isMonorepo, { verbose } = {}) {
           const cfg = loadConfig() || {};
           const ignored = Array.isArray(cfg['ignore-file-changes']) ? cfg['ignore-file-changes'] : ['CHANGELOG.md', 'package.json'];
           const hasRelevant = files.some(f => {
-              const abs = path.resolve(process.cwd(), f);
-              if (!abs.startsWith(path.resolve(pkg.dir))) return false;
-              const rel = path.relative(path.resolve(pkg.dir), abs).replace(/\\\\/g, '/');
-              if (ignored.includes(rel)) return false;
-              return true;
-            });
+            const abs = path.resolve(process.cwd(), f);
+            return fileIsRelevant(abs, pkg.dir, isMonorepo, ignored);
+          });
           if (hasRelevant) {
             const { stdout: detailOut } = await execa('git', ['show', '-s', '--format=%ai|%s', hash]);
             const [dateTime, ...subjectParts] = detailOut.split('|');
@@ -283,10 +279,7 @@ export async function regenerateChangelog(pkg, isMonorepo, { verbose } = {}) {
           const ignored = Array.isArray(cfg['ignore-file-changes']) ? cfg['ignore-file-changes'] : ['CHANGELOG.md', 'package.json'];
           const hasRelevant = files.some(f => {
             const abs = path.resolve(process.cwd(), f);
-            if (!abs.startsWith(path.resolve(pkg.dir))) return false;
-            const rel = path.relative(path.resolve(pkg.dir), abs).replace(/\\\\/g, '/');
-            if (ignored.includes(rel)) return false;
-            return true;
+            return fileIsRelevant(abs, pkg.dir, isMonorepo, ignored);
           });
           if (hasRelevant) {
             const { stdout: detailOut } = await execa('git', ['show', '-s', '--format=%ai|%s', hash]);
@@ -325,4 +318,22 @@ export async function regenerateChangelog(pkg, isMonorepo, { verbose } = {}) {
     if (verbose) console.log(`[verbose] Error regenerating changelog:`, e.message);
     throw e;
   }
+}
+
+function fileIsRelevant(abs, packageDir, isMonorepo, ignored) {
+  const packagesRoot = path.resolve(process.cwd(), 'packages');
+  const absPkgDir = path.resolve(packageDir);
+  const rel = path.relative(absPkgDir, abs).replace(/\\/g, '/');
+
+  if (isMonorepo && absPkgDir === path.resolve(process.cwd())) {
+    // Root package in monorepo: relevant if file is NOT under packages/* and not ignored
+    if (abs.startsWith(packagesRoot)) return false;
+    if (ignored.includes(rel)) return false;
+    return true;
+  }
+
+  // Normal package: relevant if file is under the package dir and not ignored
+  if (!abs.startsWith(absPkgDir)) return false;
+  if (ignored.includes(rel)) return false;
+  return true;
 }
