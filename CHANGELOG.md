@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.28] - 2026-02-08
+**Features:**
+- ignore file-only changes via .idae-pnpm-release; add tests and docs
+
+
+
 ## [1.0.27] - 2026-02-07
 **Other:**
 - Merge branch 'main' of https://github.com/medyll/idae-pnpm-release
