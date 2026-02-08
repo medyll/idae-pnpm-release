@@ -92,6 +92,8 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
   }
 
   const exec = deps.execa || execa;
+  // Ensure git won't spawn a pager or wait for interactive input on Windows
+  const execOptions = { env: { ...process.env, GIT_PAGER: 'cat' } };
   const packagesToRelease = [];
 
   for (const pkg of allPackages) {
@@ -104,11 +106,11 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
     if (verbose) console.log(`[verbose] Using git range: ${range}`);
 
     // Get commit hashes touching the package directory in the range
-    // pkg.dir is absolute path, works for both workspace and root
-    // Try to get commit hashes. Some tests/stubs return commit bodies instead; handle both.
+    // Use a relative path for the git pathspec and disable the pager to avoid hangs
+    const relPkgPath = path.relative(process.cwd(), pkg.dir).replace(/\\/g, '/');
     let hashesOutRaw;
     try {
-      const res = await exec('git', ['log', range, '--format=%H', '--', pkg.dir]);
+      const res = await exec('git', ['--no-pager', 'log', range, '--format=%H', '--', relPkgPath], execOptions);
       hashesOutRaw = (res && res.stdout !== undefined) ? res.stdout : res;
     } catch (e) {
       hashesOutRaw = '';
@@ -125,8 +127,8 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
       const hashes = (hashesOutRaw || '').split('\n').filter(Boolean);
 
       for (const hash of hashes) {
-      // Get list of files changed in this commit
-      const { stdout: filesOut } = await exec('git', ['show', '--pretty=format:', '--name-only', hash]);
+      // Get list of files changed in this commit (disable pager)
+      const { stdout: filesOut } = await exec('git', ['--no-pager', 'show', '--pretty=format:', '--name-only', hash], execOptions);
       const files = filesOut.split('\n').map(f => f.trim()).filter(Boolean);
 
       // Determine if this commit contains at least one relevant file inside the package dir
@@ -144,8 +146,8 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
       });
 
       if (hasRelevant) {
-        // Get commit message body
-        const { stdout: bodyOut } = await exec('git', ['show', '-s', '--format=%B', hash]);
+        // Get commit message body (disable pager)
+        const { stdout: bodyOut } = await exec('git', ['--no-pager', 'show', '-s', '--format=%B', hash], execOptions);
         const commitBody = bodyOut.trim();
         if (commitBody) relevantCommits.push(commitBody);
       }
