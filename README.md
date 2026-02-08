@@ -127,6 +127,20 @@ The tool looks for a `.idae-pnpm-release` file (JSON) in the project root.
 }
 ```
 
+### Ignoring file-only changes
+
+You can configure filenames that should be ignored when deciding whether a package has relevant changes. This is useful to avoid triggering changelog generation or releases when only `package.json` or `CHANGELOG.md` were modified.
+
+Add the `ignore-file-changes` key to the config file with an array of filenames (relative to the package root). Example:
+
+```json
+{
+  "ignore-file-changes": ["CHANGELOG.md", "package.json"]
+}
+```
+
+The default behavior (if the key is absent) ignores `CHANGELOG.md` and `package.json`.
+
 ---
 
 ## 🛠 Workflow Integration
