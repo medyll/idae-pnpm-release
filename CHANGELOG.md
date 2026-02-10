@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.30] - 2026-02-10
+**Documentation:**
+- update Copilot instructions for clarity and detail
+
+
+
 ## [1.0.29] - 2026-02-08
 **Features:**
 - update changelog generation to include private packages and add changelogs for package1 and package2
