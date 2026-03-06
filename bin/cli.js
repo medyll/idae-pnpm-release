@@ -51,6 +51,4 @@ program
       console.error(`\n❌ Execution failed: ${error.message}`);
       process.exit(1);
     }
-  });
-
-program.parse(process.argv);
+  }).parse(process.argv);
