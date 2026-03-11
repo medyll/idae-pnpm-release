@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.31] - 2026-02-10
+**Chores:**
+- update dependencies for semver and @types/node
+
+
+
 ## [1.0.30] - 2026-02-10
 **Documentation:**
 - update Copilot instructions for clarity and detail
