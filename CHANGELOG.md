@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.32] - 2026-03-11
+**Documentation:**
+- add baseline audit artifact at bmad/artifacts/audit-baseline-2026-03-06.md
+- add AGENTS.md with build/test/lint guidelines and coding standards; include Copilot reference notes
+
+
+
 ## [1.0.31] - 2026-02-10
 **Chores:**
 - update dependencies for semver and @types/node
