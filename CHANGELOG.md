@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.33] - 2026-03-14
+**Features:**
+- add context-mode hooks for vscode-copilot integration
+
+
+
 ## [1.0.32] - 2026-03-11
 **Documentation:**
 - add baseline audit artifact at bmad/artifacts/audit-baseline-2026-03-06.md
