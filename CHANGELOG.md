@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.42] - 2026-04-20
+**Bug Fixes:**
+- reorder mocha dependency in pnpm-lock.yaml
+- update version retrieval and improve package.json structure
+
+**Other:**
+- 1.0.41
+- 1.0.40
+- 1.0.39
+
+
+
 ## [1.0.39] - 2026-04-20
 **Other:**
 - 1.0.38
