@@ -51,7 +51,7 @@ export async function generateRootReadme({ verbose, dryRun } = {}) {
     const rootPkgContent = await fs.readFile(rootPkgPath, 'utf-8');
     rootPkg = JSON.parse(rootPkgContent);
   } catch (e) {
-    if (verbose) console.error('❌ Could not read root package.json for README generation');
+    if (verbose) console.error('Could not read root package.json for README generation');
     return;
   }
 
@@ -69,7 +69,7 @@ export async function generateRootReadme({ verbose, dryRun } = {}) {
   }
   
   if (typeof getPkgs !== 'function') {
-      console.error("❌ Could not load findWorkspacePackages function.");
+      console.error("Could not load findWorkspacePackages function.");
       return;
   }
   
@@ -170,5 +170,5 @@ export async function generateRootReadme({ verbose, dryRun } = {}) {
   }
 
   await fs.writeFile(readmePath, readmeContent, 'utf-8');
-  console.log(`📝 Generated root README.md`);
+  console.log(`Generated root README.md`);
 }

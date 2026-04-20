@@ -1,0 +1,29 @@
+project: idae-pnpm-release
+phase: development
+progress: 25
+next_action: Run tests with bmad test unit
+next_command: bmad analyze
+next_role: pm
+active_role: pm
+phases:
+  - name: planning
+    status: done
+  - name: development
+    status: in_progress
+  - name: testing
+    status: upcoming
+  - name: release
+    status: upcoming
+marketing:
+  - Project in planning phase
+product:
+  - Initial assessment pending
+far_vision:
+  - Long-term vision to be defined
+artifacts:
+  prd: missing
+  architecture: missing
+  tech-spec: missing
+sprints: []
+qa:
+  bugs: []

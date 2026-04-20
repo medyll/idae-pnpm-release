@@ -9,7 +9,7 @@ async function readPackageManifest(pkgDir) {
 }
 
 async function runPackageScript(pkgDir, scriptName) {
-  console.log(`    ⚙️  pnpm run ${scriptName}...`);
+  console.log(`    pnpm run ${scriptName}...`);
   await execa("pnpm", ["run", scriptName], { cwd: pkgDir });
 }
 
@@ -38,7 +38,7 @@ export async function executePrePublishCommands(packages, options) {
 
     if (missingScripts.length > 0) {
       console.log(
-        `    ℹ️  ${manifest.name}: missing script(s): ${missingScripts.join(", ")}. Skipping.`,
+        `    ${manifest.name}: missing script(s): ${missingScripts.join(", ")}. Skipping.`,
       );
     }
 

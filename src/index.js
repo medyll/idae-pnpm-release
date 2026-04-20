@@ -59,7 +59,7 @@ async function getAllPackages({ verbose } = {}) {
         manifest: manifest
       }];
     } catch (err) {
-      console.error("❌ No pnpm workspace or package.json found.");
+      console.error("No pnpm workspace or package.json found.");
       return [];
     }
   }
@@ -122,7 +122,7 @@ async function executeRegenerateChangelog(options) {
   const verbose = options.verbose;
 
   console.log(
-    `\n${colors.bright}${colors.blue}📝 Regenerating CHANGELOGs from git history...${colors.reset}\n`,
+    `\n${colors.bright}${colors.blue}Regenerating CHANGELOGs from git history...${colors.reset}\n`,
   );
   vLog(verbose, "Options:", options);
 
@@ -131,7 +131,7 @@ async function executeRegenerateChangelog(options) {
   const monoRepo = allPackages.length > 1;
   console.log(`${colors.cyan}Monorepo mode: ${monoRepo ? 'YES' : 'NO'}${colors.reset}`);
   if (!allPackages.length) {
-    console.error("❌ No packages found.");
+    console.error("No packages found.");
     return;
   }
 
@@ -139,7 +139,7 @@ async function executeRegenerateChangelog(options) {
 
   // Regenerate for each package (include private packages for changelog regeneration)
   for (const pkg of allPackages) {
-    console.log(`${colors.cyan}  📝 ${pkg.manifest.name || pkg.dir}${colors.reset}`);
+    console.log(`${colors.cyan}  ${pkg.manifest.name || pkg.dir}${colors.reset}`);
     
     // Prepare package object for changelog function
     const pkgData = {
@@ -157,7 +157,7 @@ async function executeRegenerateChangelog(options) {
   }
 
   console.log(
-    `\n${colors.bright}${colors.green}🎉 Changelog regeneration completed!${colors.reset}\n`,
+    `\n${colors.bright}${colors.green}Changelog regeneration completed.${colors.reset}\n`,
   );
 }
 
@@ -172,17 +172,17 @@ export async function executeRelease(options) {
   const verbose = options.verbose;
 
   console.log(
-    `\n${colors.bright}${colors.blue}🚀 Starting release process in ${mode} mode...${colors.reset}\n`,
+    `\n${colors.bright}${colors.blue}Starting release process in ${mode} mode...${colors.reset}\n`,
   );
   vLog(verbose, "Options:", options);
 
   // 1. Detection
-  console.log(`${colors.cyan}🔍 Analyzing changes...${colors.reset}`);
+  console.log(`${colors.cyan}Analyzing changes...${colors.reset}`);
   const changes = await analyzeChanges({ verbose });
 
   if (!changes.length) {
     console.log(
-      `${colors.yellow}✨ Nothing to release. All packages are up to date.${colors.reset}`,
+      `${colors.yellow}Nothing to release. All packages are up to date.${colors.reset}`,
     );
     return;
   }
@@ -195,7 +195,7 @@ export async function executeRelease(options) {
   await executePrePublishCommands(changes, options);
 
   // 3. Bumping versions
-  console.log(`${colors.cyan}🆙 Bumping versions...${colors.reset}`);
+  console.log(`${colors.cyan}Bumping versions...${colors.reset}`);
   const released = await bumpPackages(changes, isPre, options.preId, { verbose, dryRun: options.dryRun });
 
   for (const pkg of released) {
@@ -204,34 +204,34 @@ export async function executeRelease(options) {
     );
     
     // 3. Changelogs
-    console.log(`  - ${colors.blue}📝 Updating CHANGELOG.md...${colors.reset}`);
+    console.log(`  - ${colors.blue}Updating CHANGELOG.md...${colors.reset}`);
     await updateChangelog(pkg, { verbose });
   }
 
   // 4. Generate Root README if requested
   if (options.generateReadmeRoot) {
-    console.log(`${colors.cyan}📝 Generating root README.md...${colors.reset}`);
+    console.log(`${colors.cyan}Generating root README.md...${colors.reset}`);
     await generateRootReadme({ verbose, dryRun: options.dryRun });
   }
 
   // 5. Execution or Dry Run
   if (!options.dryRun) {
     console.log(
-      `\n${colors.magenta}📂 Finalizing Git operations (commit & tags)...${colors.reset}`,
+      `\n${colors.magenta}Finalizing Git operations (commit & tags)...${colors.reset}`,
     );
     await finalizeGit(released, { verbose });
 
-    console.log(`${colors.magenta}📦 Publishing to registry...${colors.reset}`);
+    console.log(`${colors.magenta}Publishing to registry...${colors.reset}`);
     await publishToRegistry(released, isPre ? options.preId : "latest", {
       verbose,
     });
 
     console.log(
-      `\n${colors.bright}${colors.green}🎉 Release successfully finished!${colors.reset}\n`,
+      `\n${colors.bright}${colors.green}Release successfully finished.${colors.reset}\n`,
     );
   } else {
     console.log(
-      `\n${colors.bright}${colors.yellow}⚠️  DRY RUN COMPLETED${colors.reset}`,
+      `\n${colors.bright}${colors.yellow}DRY RUN COMPLETED${colors.reset}`,
     );
     console.log(
       `${colors.yellow}No changes were pushed to Git or NPM.${colors.reset}\n`,
