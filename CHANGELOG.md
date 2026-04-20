@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.37] - 2026-04-20
+**Chores:**
+- remove outdated Copilot instructions file
+
+
+
 ## [1.0.36] - 2026-04-20
 **Bug Fixes:**
 - adjust argument order for pnpm publish command in multi-package scenario
