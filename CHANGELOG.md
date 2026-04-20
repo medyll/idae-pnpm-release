@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.39] - 2026-04-20
+**Other:**
+- 1.0.38
+
+
+
 ## [1.0.37] - 2026-04-20
 **Chores:**
 - remove outdated Copilot instructions file
