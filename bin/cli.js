@@ -1,15 +1,21 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { join, dirname } from 'path';
 import { executeRelease } from '../src/index.js';
 import { loadConfig, createConfig } from '../src/config.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const { version } = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'));
 
 const program = new Command();
 
 program
   .name('@medyll/idae-pnpm-release')
   .description('Automated release tool for pnpm workspaces and single packages')
-  .version('1.0.0')
+  .version(version)
   .option('-d, --dry-run', 'Analyze and simulate the release without any side effects', false)
   .option('-p, --pre-id <id>', 'Identifier for pre-release (e.g. alpha, beta, next)', 'alpha')
   .option('-v, --verbose', 'Print detailed logs', false)
