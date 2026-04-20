@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.35] - 2026-04-20
+**Chores:**
+- update README formatting and remove emoji from section titles
+
+
+
 ## [1.0.34] - 2026-04-20
 **Features:**
 - update context-mode hooks for vscode-copilot integration and improve log messages
