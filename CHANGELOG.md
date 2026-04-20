@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.34] - 2026-04-20
+**Features:**
+- update context-mode hooks for vscode-copilot integration and improve log messages
+
+
+
 ## [1.0.33] - 2026-03-14
 **Features:**
 - add context-mode hooks for vscode-copilot integration
