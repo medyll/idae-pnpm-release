@@ -20,9 +20,6 @@ importers:
       execa:
         specifier: ^9.6.1
         version: 9.6.1
-      mocha:
-        specifier: ^11.7.5
-        version: 11.7.5
       semver:
         specifier: ^7.7.4
         version: 7.7.4
@@ -33,6 +30,9 @@ importers:
       '@types/semver':
         specifier: ^7.7.1
         version: 7.7.1
+      mocha:
+        specifier: ^11.7.5
+        version: 11.7.5
       sinon:
         specifier: ^21.0.1
         version: 21.0.1
