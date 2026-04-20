@@ -1,11 +1,11 @@
 
 ---
 
-# @medyll/idae-pnpm-release 🤖
+# @medyll/idae-pnpm-release 
 
 A lightweight, automated release manager for **pnpm workspaces**. It handles versioning, changelog generation, and publishing directly from GitHub Actions, for monorepos or standalone projects.
 
-## ✨ Features
+##  Features
 
 * **Directory-based Detection**: Only bumps packages that have actual changes in their folder.
 * **Independent Versioning**: Each package follows its own lifecycle.
@@ -16,7 +16,7 @@ A lightweight, automated release manager for **pnpm workspaces**. It handles ver
 
 ---
 
-## 🚀 Installation & Usage
+## Installation & Usage
 
 ## CLI Options
 
@@ -39,7 +39,7 @@ npx @medyll/idae-pnpm-release --package
 npx @medyll/idae-pnpm-release --build --package
 ```
 
-## 🔁 Publish behavior
+## Publish behavior
 
 When publishing, the tool uses pnpm in a monorepo-friendly way:
 
@@ -120,7 +120,7 @@ Then add the following script to `package.json` :
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 You can configure the tool using CLI arguments or a configuration file.
 The tool looks for a `.idae-pnpm-release` file (JSON) in the project root.
@@ -157,7 +157,7 @@ The default behavior (if the key is absent) ignores `CHANGELOG.md` and `package.
 
 ---
 
-## 🛠 Workflow Integration
+## Workflow Integration
 
 Create the file `.github/workflows/release.yml` :
 
@@ -194,7 +194,7 @@ jobs:
 
 ---
 
-## 📖 CLI Options
+## CLI Options
 
 | Option | Alias | Description | Default |
 | --- | --- | --- | --- |
@@ -210,7 +210,7 @@ jobs:
 
 ---
 
-## 📝 Commit Convention
+## Commit Convention
 
 The tool analyzes your commit messages to decide the next bump:
 
@@ -220,7 +220,7 @@ The tool analyzes your commit messages to decide the next bump:
 
 ---
 
-## 🛠 Troubleshooting
+## Troubleshooting
 
 ### NPM Authentication Issues
 
@@ -242,7 +242,7 @@ The tool automatically configures `github-actions[bot]`. If you use your own ide
 
 ---
 
-## 📄 License
+## License
 
 MIT
 
