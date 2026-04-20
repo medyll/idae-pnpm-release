@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.36] - 2026-04-20
+**Bug Fixes:**
+- adjust argument order for pnpm publish command in multi-package scenario
+
+
+
 ## [1.0.35] - 2026-04-20
 **Chores:**
 - update README formatting and remove emoji from section titles
