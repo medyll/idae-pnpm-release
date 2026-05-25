@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.43] - 2026-05-25
+**Features:**
+- add initial configuration for context-mode server
+
+
+
 ## [1.0.42] - 2026-04-20
 **Bug Fixes:**
 - reorder mocha dependency in pnpm-lock.yaml
