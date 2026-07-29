@@ -1,24 +1,40 @@
 // author : Lebrun Meddy
-import findWorkspacePackages from '@pnpm/find-workspace-packages';
+import * as findWorkspacePackagesModule from '@pnpm/find-workspace-packages';
 import { execa } from 'execa';
 import fs from 'fs/promises';
 import path from 'path';
 import { loadConfig } from './config.js';
 
 /**
+ * Resolve the findWorkspacePackages function across import styles.
+ * The package is CommonJS: under Node's ESM interop `default` is the whole
+ * module.exports object, not the function, so the named export is the only
+ * reliable entry point.
+ */
+function resolveFindWorkspacePackages(override) {
+  if (typeof override === 'function') return override;
+
+  const mod = findWorkspacePackagesModule;
+  const candidates = [
+    mod,
+    mod?.findWorkspacePackages,
+    mod?.default,
+    mod?.default?.findWorkspacePackages
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'function') return candidate;
+  }
+
+  throw new Error('findWorkspacePackages is not a function');
+}
+
+/**
  * Detect if the current project is a monorepo
  */
 export async function isMonorepo({ verbose } = {}) {
   try {
-    // Support both ESM and CommonJS import styles
-    let getPkgs;
-    if (typeof findWorkspacePackages === 'function') {
-      getPkgs = findWorkspacePackages;
-    } else if (findWorkspacePackages && typeof findWorkspacePackages.default === 'function') {
-      getPkgs = findWorkspacePackages.default;
-    } else {
-      throw new Error('findWorkspacePackages is not a function');
-    }
+    const getPkgs = resolveFindWorkspacePackages();
     const result = await getPkgs('.');
     let allPackages = [];
     if (Array.isArray(result)) {
@@ -70,10 +86,7 @@ export async function analyzeChanges({ verbose, deps = {} } = {}) {
 
   try {
     // Robust import handling for pnpm's internal tool
-    const getPkgs = deps.findWorkspacePackages
-      || (typeof findWorkspacePackages === 'function'
-        ? findWorkspacePackages
-        : findWorkspacePackages.default);
+    const getPkgs = resolveFindWorkspacePackages(deps.findWorkspacePackages);
 
     allPackages = await getPkgs('.')
     if (verbose) console.log('[verbose] Found packages:', allPackages.map(p => p.manifest?.name || p.dir));
