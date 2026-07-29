@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.45] - 2026-07-29
+**CI/CD:**
+- allow manual release runs
+
+
+
 ## [1.0.44] - 2026-07-29
 **Bug Fixes:**
 - resolve findWorkspacePackages named export
