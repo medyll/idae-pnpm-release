@@ -14,6 +14,51 @@ async function runPackageScript(pkgDir, scriptName) {
 }
 
 /**
+ * Order packages so that a package is always built after the workspace
+ * packages it depends on. Without this, a consumer can be built before its
+ * dependency has produced dist/, and type resolution fails.
+ * Cycles and unknown deps are tolerated: remaining nodes keep discovery order.
+ * @param {Array} packages
+ * @param {Map<string, object>} manifests - keyed by pkg.dir
+ */
+function sortByDependencyOrder(packages, manifests) {
+  const byName = new Map();
+  for (const pkg of packages) {
+    const manifest = manifests.get(pkg.dir);
+    if (manifest?.name) byName.set(manifest.name, pkg);
+  }
+
+  const dependenciesOf = (pkg) => {
+    const manifest = manifests.get(pkg.dir) || {};
+    const all = {
+      ...manifest.dependencies,
+      ...manifest.devDependencies,
+      ...manifest.peerDependencies,
+    };
+    // Only workspace siblings that are part of this run matter here.
+    return Object.keys(all).filter((name) => byName.has(name) && byName.get(name) !== pkg);
+  };
+
+  const sorted = [];
+  const state = new Map(); // pkg -> 'visiting' | 'done'
+
+  const visit = (pkg) => {
+    const status = state.get(pkg);
+    if (status === "done") return;
+    if (status === "visiting") return; // cycle: break here, order stays best-effort
+    state.set(pkg, "visiting");
+    for (const depName of dependenciesOf(pkg)) {
+      visit(byName.get(depName));
+    }
+    state.set(pkg, "done");
+    sorted.push(pkg);
+  };
+
+  for (const pkg of packages) visit(pkg);
+  return sorted;
+}
+
+/**
  * Execute pre-publish commands (build and/or package) before release
  * @param {Array} packages - Packages to process
  * @param {Object} options - CLI options
@@ -29,8 +74,13 @@ export async function executePrePublishCommands(packages, options) {
     return;
   }
 
+  const manifests = new Map();
   for (const pkg of packages) {
-    const manifest = await readPackageManifest(pkg.dir);
+    manifests.set(pkg.dir, await readPackageManifest(pkg.dir));
+  }
+
+  for (const pkg of sortByDependencyOrder(packages, manifests)) {
+    const manifest = manifests.get(pkg.dir);
     const scripts = manifest.scripts || {};
     const missingScripts = requestedScripts.filter(
       (scriptName) => !scripts[scriptName],
