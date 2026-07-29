@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.46] - 2026-07-29
+**Bug Fixes:**
+- build packages in dependency order
+
+
+
 ## [1.0.45] - 2026-07-29
 **CI/CD:**
 - allow manual release runs
