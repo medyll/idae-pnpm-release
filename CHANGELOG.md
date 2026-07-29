@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.44] - 2026-07-29
+**Bug Fixes:**
+- resolve findWorkspacePackages named export
+
+
+
 ## [1.0.43] - 2026-05-25
 **Features:**
 - add initial configuration for context-mode server
