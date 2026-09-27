@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.47] - 2026-09-27
+**Chores:**
+- update dependencies
+
+
+
 ## [1.0.46] - 2026-07-29
 **Bug Fixes:**
 - build packages in dependency order
