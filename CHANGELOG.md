@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.54] - 2026-11-26
+**Tests:**
+- run single-package cases outside the workspace
+
+**CI/CD:**
+- dependency updates by Dependabot with verified auto-merge
+- verify pull requests
+
+
+
 ## [1.0.53] - 2026-11-26
 **Bug Fixes:**
 - publish through npm trusted publishing
