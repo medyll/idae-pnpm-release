@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.53] - 2026-11-26
+**Bug Fixes:**
+- publish through npm trusted publishing
+
+
+
 ## [1.0.52] - 2026-11-25
 **Chores:**
 - update compatible dependencies
