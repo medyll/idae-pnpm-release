@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # Important for git tags and commits
-      id-token: write # Required for NPM provenance if enabled
+      id-token: write # npm trusted publishing (OIDC), no NPM_TOKEN needed
     
     steps:
       - name: Checkout Repository
@@ -47,7 +47,6 @@ jobs:
         env:
           # Use the built-in GITHUB_TOKEN for git operations
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Your NPM secret for publishing
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # npm publish authenticates through trusted publishing (OIDC)
           # Environment variable for the branch-based logic in src/index.js
           GITHUB_REF: ${{ github.ref }}

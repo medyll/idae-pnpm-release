@@ -2,6 +2,10 @@
   "name": "@medyll/idae-pnpm-release",
   "version": "1.0.52",
   "description": "Minimalist monorepo release tool for pnpm workspaces",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/medyll/idae-pnpm-release.git"
+  },
   "type": "module",
   "main": "src/index.js",
   "module": "src/index.js",
